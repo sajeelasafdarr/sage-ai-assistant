@@ -1,225 +1,1885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sage AI Assistant — Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sage AI — Business Automation Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   ROOT TOKENS
+═══════════════════════════════════════════════════ */
+:root {
+  --ink:        #0a0f1e;
+  --ink2:       #1a2035;
+  --ink3:       #2a3555;
+  --surface:    #111827;
+  --surface2:   #1c2740;
+  --surface3:   #243050;
+  --border:     rgba(255,255,255,.08);
+  --border2:    rgba(255,255,255,.14);
+  --text:       #e8edf5;
+  --text2:      #8fa3c0;
+  --text3:      #5a7090;
+  --blue:       #3b7ff8;
+  --blue-soft:  rgba(59,127,248,.15);
+  --teal:       #00d4a8;
+  --teal-soft:  rgba(0,212,168,.12);
+  --amber:      #f5a623;
+  --amber-soft: rgba(245,166,35,.12);
+  --rose:       #f05070;
+  --rose-soft:  rgba(240,80,112,.12);
+  --violet:     #9f7aea;
+  --violet-soft:rgba(159,122,234,.12);
+  --green:      #48d597;
+  --green-soft: rgba(72,213,151,.12);
+  --rad-sm:  8px;
+  --rad-md:  14px;
+  --rad-lg:  20px;
+  --rad-xl:  28px;
+  --ease:    cubic-bezier(.4,0,.2,1);
+  --spring:  cubic-bezier(.34,1.56,.64,1);
+}
 
-  <!-- Optional: Google Fonts (will also be loaded by sage-ai.js) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
-    crossorigin="anonymous">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <style>
-    /* ── Demo Page Styles ───────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-    body {
-      font-family: 'DM Sans', system-ui, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-    }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--ink);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-    .hero {
-      text-align: center;
-      max-width: 600px;
-    }
+/* ═══════════════════════════════════════════════════
+   BACKGROUND ATMOSPHERE
+═══════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(59,127,248,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(0,212,168,.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-    .hero-badge {
-      display: inline-block;
-      background: rgba(37,99,235,.2);
-      color: #93c5fd;
-      border: 1px solid rgba(37,99,235,.4);
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .5px;
-      padding: 5px 14px;
-      margin-bottom: 28px;
-      text-transform: uppercase;
-    }
+/* ═══════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════ */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.2rem);
-      font-weight: 700;
-      line-height: 1.15;
-      background: linear-gradient(135deg, #e2e8f0 0%, #93c5fd 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 18px;
-    }
+/* ═══════════════════════════════════════════════════
+   SIDEBAR NAV
+═══════════════════════════════════════════════════ */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(17,24,39,.8);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  transition: transform .3s var(--ease);
+}
 
-    .hero p {
-      font-size: 1.05rem;
-      color: #94a3b8;
-      line-height: 1.7;
-      margin-bottom: 36px;
-    }
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
 
-    .cta-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+.logo-mark {
+  display: flex; align-items: center; gap: 10px;
+}
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: transform .2s, box-shadow .2s;
-      text-decoration: none;
-    }
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(59,127,248,.3);
+}
 
-    .btn:hover { transform: translateY(-2px); }
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-    .btn-primary {
-      background: #2563eb;
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(37,99,235,.4);
-    }
+.logo-sub {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
 
-    .btn-primary:hover { box-shadow: 0 8px 24px rgba(37,99,235,.5); }
+nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
 
-    .btn-secondary {
-      background: rgba(255,255,255,.06);
-      color: #e2e8f0;
-      border: 1px solid rgba(255,255,255,.12);
-    }
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 10px 6px;
+}
 
-    .code-block {
-      margin-top: 48px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 12px;
-      padding: 20px 24px;
-      text-align: left;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      color: #7dd3fc;
-      line-height: 1.7;
-    }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--rad-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all .18s var(--ease);
+  border: 1px solid transparent;
+  position: relative;
+}
 
-    .code-comment { color: #475569; }
-    .code-tag     { color: #93c5fd; }
-    .code-attr    { color: #fbbf24; }
-    .code-val     { color: #4ade80; }
+.nav-item:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
 
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 14px;
-      margin-top: 40px;
-      width: 100%;
-    }
+.nav-item.active {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-color: rgba(59,127,248,.2);
+}
 
-    .feature-card {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 10px;
-      padding: 16px;
-      font-size: 13px;
-      color: #94a3b8;
-    }
+.nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
 
-    .feature-card .icon { font-size: 20px; margin-bottom: 8px; }
-    .feature-card strong { display: block; color: #e2e8f0; margin-bottom: 4px; font-size: 13.5px; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--rose);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
 
-    footer {
-      margin-top: 60px;
-      font-size: 12px;
-      color: #475569;
-      text-align: center;
-    }
-  </style>
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════════ */
+#main {
+  margin-left: 220px;
+  flex: 1;
+  padding: 32px;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════════ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.topbar-left h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+
+.topbar-left p {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+
+.topbar-right { display: flex; gap: 10px; align-items: center; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--rad-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .18s var(--ease);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(59,127,248,.35);
+}
+.btn-primary:hover { background: #5a94ff; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+/* ═══════════════════════════════════════════════════
+   PANELS (each module)
+═══════════════════════════════════════════════════ */
+.panel { display: none; animation: panelIn .3s var(--ease) both; }
+.panel.active { display: block; }
+
+@keyframes panelIn {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  border-radius: 0 var(--rad-md) 0 100%;
+  opacity: .15;
+}
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.teal::before { background: var(--teal); }
+.stat-card.amber::before { background: var(--amber); }
+.stat-card.rose::before { background: var(--rose); }
+.stat-card.violet::before { background: var(--violet); }
+.stat-card.green::before { background: var(--green); }
+
+.stat-icon { font-size: 22px; margin-bottom: 10px; }
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.stat-delta {
+  font-size: 11px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.stat-delta.up { color: var(--teal); }
+.stat-delta.down { color: var(--rose); }
+
+/* ═══════════════════════════════════════════════════
+   SECTION HEADERS
+═══════════════════════════════════════════════════ */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+.section-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* ═══════════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════════ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  color: var(--text2);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.td-name { color: var(--text); font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════
+   BADGES / CHIPS
+═══════════════════════════════════════════════════ */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.chip-blue   { background: var(--blue-soft);   color: var(--blue); }
+.chip-teal   { background: var(--teal-soft);   color: var(--teal); }
+.chip-amber  { background: var(--amber-soft);  color: var(--amber); }
+.chip-rose   { background: var(--rose-soft);   color: var(--rose); }
+.chip-violet { background: var(--violet-soft); color: var(--violet); }
+.chip-green  { background: var(--green-soft);  color: var(--green); }
+
+/* ═══════════════════════════════════════════════════
+   CRM PIPELINE
+═══════════════════════════════════════════════════ */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.pipeline-col {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pipeline-col-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pipeline-count {
+  background: var(--surface3);
+  color: var(--text3);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.pipeline-cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+.crm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-sm);
+  padding: 12px;
+  cursor: grab;
+  transition: all .2s var(--ease);
+  user-select: none;
+}
+.crm-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3);
+}
+.crm-card.dragging {
+  opacity: .5;
+  cursor: grabbing;
+}
+.crm-card-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.crm-card-meta { font-size: 11px; color: var(--text3); }
+.crm-card-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+
+.pipeline-col.drag-over { background: rgba(59,127,248,.06); border-color: rgba(59,127,248,.3); }
+
+/* ═══════════════════════════════════════════════════
+   EMAIL DRIP CAMPAIGN
+═══════════════════════════════════════════════════ */
+.drip-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.drip-sequence::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: 40px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--blue), var(--teal), var(--violet));
+  opacity: .3;
+}
+
+.drip-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 0;
+  position: relative;
+}
+
+.drip-step-num {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+  z-index: 1;
+  border: 2px solid;
+}
+
+.drip-step:nth-child(1) .drip-step-num { background: var(--blue-soft);   color: var(--blue);   border-color: var(--blue); }
+.drip-step:nth-child(2) .drip-step-num { background: var(--teal-soft);   color: var(--teal);   border-color: var(--teal); }
+.drip-step:nth-child(3) .drip-step-num { background: var(--violet-soft); color: var(--violet); border-color: var(--violet); }
+.drip-step:nth-child(4) .drip-step-num { background: var(--amber-soft);  color: var(--amber);  border-color: var(--amber); }
+
+.drip-content {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 16px;
+  transition: border-color .2s;
+}
+.drip-content:hover { border-color: var(--border2); }
+
+.drip-delay { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 500; }
+.drip-subject { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.drip-preview { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+
+.drip-stats { display: flex; gap: 16px; margin-top: 10px; }
+.drip-stat { font-size: 11px; color: var(--text3); }
+.drip-stat span { color: var(--teal); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════
+   DOCUMENT GENERATOR
+═══════════════════════════════════════════════════ */
+.doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.doc-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: .3px; }
+.form-input, .form-select, .form-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-sm);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,127,248,.12);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+.form-select option { background: var(--surface2); }
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.doc-preview {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 24px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text2);
+  font-family: 'DM Mono', monospace;
+  min-height: 320px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+}
+
+.doc-preview .tpl-field {
+  background: rgba(59,127,248,.15);
+  color: var(--blue);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* ═══════════════════════════════════════════════════
+   WORKFLOW ENGINE
+═══════════════════════════════════════════════════ */
+.workflow-list { display: flex; flex-direction: column; gap: 12px; }
+
+.workflow-rule {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color .2s;
+}
+.workflow-rule:hover { border-color: var(--border2); }
+
+.workflow-toggle {
+  width: 38px; height: 22px;
+  border-radius: 999px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.workflow-toggle.on { background: var(--teal); border-color: var(--teal); }
+.workflow-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s var(--spring);
+}
+.workflow-toggle.on::after { transform: translateX(16px); }
+
+.workflow-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--rad-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.workflow-info { flex: 1; }
+.workflow-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.workflow-desc { font-size: 12px; color: var(--text3); }
+
+.workflow-rule-chain {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+}
+.rule-if {
+  background: var(--violet-soft); color: var(--violet);
+  padding: 3px 10px; border-radius: 999px; font-weight: 600;
+}
+.rule-arrow { color: var(--text3); font-size: 14px; }
+.rule-then {
+  background: var(--teal-soft); color: var(--teal);
+  padding: 3px 10px; border-radius: 999px; font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════
+   CHATBOT PANEL
+═══════════════════════════════════════════════════ */
+.chat-demo-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+.chat-window {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-xl);
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  overflow: hidden;
+}
+
+.chat-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--blue), #1a5fd6);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.chat-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  border: 2px solid rgba(255,255,255,.3);
+}
+
+.chat-header-info .chat-name { font-weight: 700; font-size: 15px; color: #fff; }
+.chat-header-info .chat-status { font-size: 11px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 5px; }
+.online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.chat-msg {
+  display: flex;
+  gap: 8px;
+  animation: msgIn .3s var(--spring) both;
+}
+@keyframes msgIn {
+  from { opacity:0; transform: translateY(8px) scale(.95); }
+  to   { opacity:1; transform: none; }
+}
+
+.chat-msg.user { flex-direction: row-reverse; }
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.msg-bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.chat-msg.bot .msg-bubble  { background: var(--surface3); color: var(--text); border-bottom-left-radius: 4px; }
+.chat-msg.user .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
+
+.chat-typing-indicator {
+  display: flex; align-items: flex-end; gap: 8px;
+}
+.typing-bubble {
+  background: var(--surface3);
+  border-radius: 14px; border-bottom-left-radius: 4px;
+  padding: 12px 16px;
+  display: flex; gap: 4px; align-items: center;
+}
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  animation: typeBounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .15s; }
+.typing-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes typeBounce {
+  0%,60%,100% { transform: translateY(0); opacity:.4; }
+  30% { transform: translateY(-5px); opacity:1; }
+}
+
+.chat-input-row {
+  display: flex; gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.chat-input:focus { border-color: var(--blue); }
+.chat-input::placeholder { color: var(--text3); }
+
+.chat-send-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .18s var(--spring);
+  color: #fff;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(59,127,248,.3);
+}
+.chat-send-btn:hover { transform: scale(1.1); background: #5a94ff; }
+
+/* Config panel */
+.config-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.config-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+
+/* ═══════════════════════════════════════════════════
+   NOTIFICATIONS / TOAST
+═══════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.toast {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--rad-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 260px;
+  animation: toastIn .35s var(--spring) both;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.toast.success { border-left: 3px solid var(--teal); }
+.toast.info    { border-left: 3px solid var(--blue); }
+.toast.warn    { border-left: 3px solid var(--amber); }
+@keyframes toastIn {
+  from { opacity:0; transform: translateX(40px) scale(.9); }
+  to   { opacity:1; transform: none; }
+}
+@keyframes toastOut {
+  to { opacity:0; transform: translateX(40px) scale(.9); }
+}
+
+/* ═══════════════════════════════════════════════════
+   ACTIVITY FEED
+═══════════════════════════════════════════════════ */
+.activity-feed { display: flex; flex-direction: column; }
+.activity-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-dot-wrap { display: flex; flex-direction: column; align-items: center; }
+.activity-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.activity-content { flex: 1; }
+.activity-title { font-size: 13px; color: var(--text); }
+.activity-title strong { color: var(--text); }
+.activity-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════
+   MINI CHART (SVG)
+═══════════════════════════════════════════════════ */
+.mini-chart { height: 60px; width: 100%; overflow: visible; }
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #main { margin-left: 0; padding: 20px; }
+  .pipeline { grid-template-columns: repeat(2, 1fr); }
+  .doc-grid { grid-template-columns: 1fr; }
+  .chat-demo-grid { grid-template-columns: 1fr; }
+}
+
+.hamburger {
+  display: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-sm);
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text);
+}
+@media (max-width: 900px) { .hamburger { display: block; } }
+
+/* Scrollbar global */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+</style>
 </head>
 <body>
+<div id="toast-container"></div>
 
-  <div class="hero">
-    <div class="hero-badge">✨ Production Ready</div>
-
-    <h1>Sage AI Assistant</h1>
-
-    <p>
-      A zero-dependency, embeddable AI chatbot widget.<br>
-      Drop one <code>&lt;script&gt;</code> tag into any page and you're live.
-    </p>
-
-    <div class="cta-row">
-      <button class="btn btn-primary" onclick="SageAI.open()">
-        💬 Open Chat
-      </button>
-      <a class="btn btn-secondary" href="README.md" target="_blank">
-        📖 Documentation
-      </a>
-    </div>
-
-    <!-- Embed code preview -->
-    <div class="code-block">
-      <span class="code-comment">&lt;!-- Add this ONCE before &lt;/body&gt; --&gt;</span><br>
-      <span class="code-tag">&lt;script </span>
-      <span class="code-attr">src</span>=<span class="code-val">"https://yourdomain.com/sage-ai.js"</span>
-      <span class="code-tag">&gt;&lt;/script&gt;</span>
-    </div>
-
-    <!-- Feature cards -->
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="icon">🤖</div>
-        <strong>AI Powered</strong>
-        Connect any backend — OpenAI, Claude, custom API
-      </div>
-      <div class="feature-card">
-        <div class="icon">💾</div>
-        <strong>Persistent</strong>
-        Conversation survives page refreshes via localStorage
-      </div>
-      <div class="feature-card">
-        <div class="icon">📋</div>
-        <strong>Lead Capture</strong>
-        Collects name, email & phone automatically
-      </div>
-      <div class="feature-card">
-        <div class="icon">🌓</div>
-        <strong>Dark Mode</strong>
-        Respects system preference or toggle manually
-      </div>
-      <div class="feature-card">
-        <div class="icon">📱</div>
-        <strong>Responsive</strong>
-        Looks perfect on any screen size
-      </div>
-      <div class="feature-card">
-        <div class="icon">🎨</div>
-        <strong>Rebrandable</strong>
-        Change colours & name via one config object
+<div class="app">
+<!-- ════════════════════════════════════
+     SIDEBAR
+═════════════════════════════════════ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🤖</div>
+      <div>
+        <div class="logo-text">Sage AI</div>
+        <div class="logo-sub">Business OS</div>
       </div>
     </div>
   </div>
 
-  <footer>Sage AI Assistant Widget — MIT Licensed</footer>
+  <nav>
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" data-panel="dashboard">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
 
-  <!--
-    ╔══════════════════════════════════════════════════════╗
-    ║   This single script tag is all you need to embed   ║
-    ║   the chatbot on any website.                        ║
-    ╚══════════════════════════════════════════════════════╝
-  -->
-  <script src="sage-ai.js"></script>
+    <div class="nav-section-label">Modules</div>
+    <div class="nav-item" data-panel="chatbot">
+      <span class="nav-icon">🤖</span> AI Chatbot
+    </div>
+    <div class="nav-item" data-panel="leads">
+      <span class="nav-icon">📋</span> Lead Capture
+      <span class="nav-badge" id="leads-badge">3</span>
+    </div>
+    <div class="nav-item" data-panel="crm">
+      <span class="nav-icon">🧠</span> CRM Pipeline
+    </div>
+    <div class="nav-item" data-panel="email">
+      <span class="nav-icon">📧</span> Email Drip
+    </div>
+    <div class="nav-item" data-panel="docs">
+      <span class="nav-icon">📄</span> Documents
+    </div>
+    <div class="nav-item" data-panel="workflow">
+      <span class="nav-icon">🔁</span> Workflows
+    </div>
+  </nav>
 
+  <div class="sidebar-footer">Sage AI v2.0 · MIT License</div>
+</aside>
+
+<!-- ════════════════════════════════════
+     MAIN
+═════════════════════════════════════ -->
+<main id="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('mobile-open')">☰</button>
+    <div class="topbar-left">
+      <h1 id="page-title">Dashboard</h1>
+      <p id="page-sub">Your AI business automation overview</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-ghost" onclick="showToast('Syncing data…', 'info')">🔄 Sync</button>
+    <button class="btn btn-primary" onclick="switchPanel('chatbot')">💬 Open Chat</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: DASHBOARD
+════════════════════════════════════ -->
+<div class="panel active" id="panel-dashboard">
+
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">💬</div>
+      <div class="stat-value" id="stat-chats">247</div>
+      <div class="stat-label">Total Conversations</div>
+      <div class="stat-delta up">↑ 18% this week</div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-icon">📋</div>
+      <div class="stat-value" id="stat-leads">89</div>
+      <div class="stat-label">Leads Captured</div>
+      <div class="stat-delta up">↑ 24% this week</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value">12</div>
+      <div class="stat-label">Deals Won</div>
+      <div class="stat-delta up">↑ 6 this month</div>
+    </div>
+    <div class="stat-card rose">
+      <div class="stat-icon">📧</div>
+      <div class="stat-value">68%</div>
+      <div class="stat-label">Email Open Rate</div>
+      <div class="stat-delta down">↓ 3% vs last week</div>
+    </div>
+    <div class="stat-card violet">
+      <div class="stat-icon">📄</div>
+      <div class="stat-value">34</div>
+      <div class="stat-label">Docs Generated</div>
+      <div class="stat-delta up">↑ 11 this week</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">🔁</div>
+      <div class="stat-value">6</div>
+      <div class="stat-label">Active Workflows</div>
+      <div class="stat-delta up">All running</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Recent Activity</div>
+          <div class="section-sub">Live automation events</div>
+        </div>
+        <span class="chip chip-teal">● Live</span>
+      </div>
+      <div class="activity-feed" id="activity-feed">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Module Health</div>
+          <div class="section-sub">System status</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="health-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: CHATBOT
+════════════════════════════════════ -->
+<div class="panel" id="panel-chatbot">
+  <div class="chat-demo-grid">
+    <div>
+      <div class="section-header" style="margin-bottom:16px">
+        <div>
+          <div class="section-title">AI Chatbot Preview</div>
+          <div class="section-sub">Live demo — powered by Claude AI</div>
+        </div>
+        <span class="chip chip-teal">● Connected</span>
+      </div>
+      <div class="chat-window">
+        <div class="chat-header">
+          <div class="chat-avatar">🤖</div>
+          <div class="chat-header-info">
+            <div class="chat-name" id="chat-display-name">Sage AI Assistant</div>
+            <div class="chat-status"><span class="online-dot"></span> Online · Replies in seconds</div>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" placeholder="Type a message…" autocomplete="off">
+          <button class="chat-send-btn" id="chat-send" onclick="sendChatMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-panel">
+      <div class="config-title">⚙️ Bot Configuration</div>
+
+      <div class="form-group">
+        <label class="form-label">Bot Name</label>
+        <input class="form-input" id="cfg-name" value="Sage AI Assistant" oninput="updateChatConfig()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">System Persona</label>
+        <textarea class="form-textarea" id="cfg-persona" style="min-height:80px">You are Sage AI, a helpful business assistant. You answer questions concisely and professionally. You help capture leads, answer FAQs, and guide visitors.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Primary Colour</label>
+        <input type="color" class="form-input" id="cfg-color" value="#3b7ff8" oninput="updateChatColor(this.value)" style="height:40px;padding:4px">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Greeting Message</label>
+        <input class="form-input" id="cfg-greeting" value="👋 Hi! I'm Sage AI. How can I help you today?">
+      </div>
+
+      <button class="btn btn-primary" style="width:100%" onclick="resetChatWithNewConfig()">Apply Config</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:4px" onclick="clearChat()">🗑 Clear Chat</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: LEADS
+════════════════════════════════════ -->
+<div class="panel" id="panel-leads">
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card blue"><div class="stat-icon">📋</div><div class="stat-value" id="lead-total">89</div><div class="stat-label">Total Leads</div></div>
+    <div class="stat-card teal"><div class="stat-icon">✅</div><div class="stat-value" id="lead-new">3</div><div class="stat-label">New Today</div></div>
+    <div class="stat-card violet"><div class="stat-icon">📧</div><div class="stat-value">94%</div><div class="stat-label">Email Valid</div></div>
+    <div class="stat-card amber"><div class="stat-icon">🤖</div><div class="stat-value">67%</div><div class="stat-label">AI-Captured</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-header">
+      <div><div class="section-title">Add New Lead</div></div>
+      <button class="btn btn-primary" onclick="addManualLead()">+ Add Lead</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="l-name" placeholder="Jane Smith"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="l-email" placeholder="jane@company.com"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="l-phone" placeholder="+1 555 0100"></div>
+      <div class="form-group"><label class="form-label">Source</label>
+        <select class="form-select" id="l-source">
+          <option>AI Chatbot</option><option>Website Form</option><option>Social Media</option><option>Referral</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div><div class="section-title">Lead Database</div><div class="section-sub" id="lead-count-label">Showing 89 leads</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="exportLeads()">📥 Export CSV</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Source</th><th>Status</th><th>Date</th><th>Action</th></tr>
+      </thead>
+      <tbody id="leads-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: CRM
+════════════════════════════════════ -->
+<div class="panel" id="panel-crm">
+  <div class="section-header">
+    <div><div class="section-title">CRM Pipeline</div><div class="section-sub">Drag cards between stages</div></div>
+    <button class="btn btn-primary" onclick="addDemoLead()">+ New Deal</button>
+  </div>
+  <div class="pipeline" id="crm-pipeline"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: EMAIL
+════════════════════════════════════ -->
+<div class="panel" id="panel-email">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">Email Drip Sequence</div><div class="section-sub">Automated follow-up campaign</div></div>
+        <span class="chip chip-green">● Active</span>
+      </div>
+      <div class="drip-sequence" id="drip-sequence"></div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">Campaign Stats</div>
+        <div style="display:flex;flex-direction:column;gap:12px" id="campaign-stats"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="section-title" style="margin-bottom:12px">Quick Send</div>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Recipient</label><input class="form-input" id="quick-email" placeholder="contact@company.com"></div>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Template</label>
+          <select class="form-select" id="quick-template">
+            <option>Email 1 — Welcome</option><option>Email 2 — Follow-Up</option><option>Email 3 — Case Study</option><option>Email 4 — Conversion</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="quickSendEmail()">Send Email ➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: DOCUMENTS
+════════════════════════════════════ -->
+<div class="panel" id="panel-docs">
+  <div class="doc-grid">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px">Document Generator</div>
+      <div class="doc-form">
+        <div class="form-group">
+          <label class="form-label">Template Type</label>
+          <select class="form-select" id="doc-type" onchange="renderDocPreview()">
+            <option>Proposal</option><option>Contract</option><option>Invoice</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Client Name</label><input class="form-input" id="doc-name" placeholder="Jane Smith" oninput="renderDocPreview()"></div>
+          <div class="form-group"><label class="form-label">Company</label><input class="form-input" id="doc-company" placeholder="Acme Corp" oninput="renderDocPreview()"></div>
+          <div class="form-group"><label class="form-label">Service</label><input class="form-input" id="doc-service" placeholder="AI Automation Setup" oninput="renderDocPreview()"></div>
+          <div class="form-group"><label class="form-label">Price</label><input class="form-input" id="doc-price" placeholder="$2,500" oninput="renderDocPreview()"></div>
+          <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="doc-date" oninput="renderDocPreview()"></div>
+          <div class="form-group"><label class="form-label">Valid Until</label><input class="form-input" id="doc-valid" placeholder="30 days" oninput="renderDocPreview()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Additional Notes</label>
+          <textarea class="form-textarea" id="doc-notes" placeholder="Any special terms or notes…" oninput="renderDocPreview()"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="generateDoc()">📄 Generate Document</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-header">
+        <div class="section-title">Live Preview</div>
+        <button class="btn btn-ghost" onclick="copyDoc()">📋 Copy</button>
+      </div>
+      <div class="doc-preview" id="doc-preview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PANEL: WORKFLOW
+════════════════════════════════════ -->
+<div class="panel" id="panel-workflow">
+  <div style="display:grid;grid-template-columns:3fr 1fr;gap:20px">
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">Workflow Automation Engine</div><div class="section-sub">IF → THEN rule-based automation</div></div>
+        <button class="btn btn-primary" onclick="addWorkflowRule()">+ New Rule</button>
+      </div>
+      <div class="workflow-list" id="workflow-list"></div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px">Execution Log</div>
+        <div id="workflow-log" style="display:flex;flex-direction:column;gap:8px;font-size:12px;max-height:400px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════ */
+const pageTitles = {
+  dashboard: ['Dashboard',          'Your AI business automation overview'],
+  chatbot:   ['AI Chatbot',         'Engage visitors with Claude-powered AI'],
+  leads:     ['Lead Capture',       'All captured leads and contact data'],
+  crm:       ['CRM Pipeline',       'Visual deal management system'],
+  email:     ['Email Drip Campaigns','Automated email follow-up sequences'],
+  docs:      ['Document Generator', 'Auto-assemble proposals, contracts, invoices'],
+  workflow:  ['Workflow Engine',    'IF → THEN business automation rules'],
+};
+
+function switchPanel(key) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-panel="${key}"]`)?.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${key}`)?.classList.add('active');
+  const [title, sub] = pageTitles[key] || [key, ''];
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-sub').textContent = sub;
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchPanel(item.dataset.panel));
+});
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+function showToast(msg, type='success', duration=3200) {
+  const icons = { success:'✅', info:'💡', warn:'⚠️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut .3s var(--ease) forwards';
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
+
+/* ═══════════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════════ */
+const activities = [
+  { icon:'🤖', color:'var(--blue)',  text:'<strong>New lead</strong> captured via AI Chatbot — <strong>Arman Shah</strong>', time:'2 min ago' },
+  { icon:'📧', color:'var(--teal)',  text:'Email drip <strong>Email 2</strong> sent to <strong>Sarah Chen</strong>', time:'14 min ago' },
+  { icon:'🏆', color:'var(--amber)', text:'Deal <strong>moved to Won</strong> — <strong>TechCorp Ltd</strong> · $4,200', time:'1 hr ago' },
+  { icon:'📄', color:'var(--violet)',text:'Invoice generated for <strong>Nova Agency</strong>', time:'2 hr ago' },
+  { icon:'🔁', color:'var(--green)', text:'Workflow <strong>AI Lead → CRM</strong> triggered 5 times', time:'3 hr ago' },
+  { icon:'📋', color:'var(--rose)',  text:'Lead qualified: <strong>David Kim</strong> moved to Proposal', time:'4 hr ago' },
+];
+
+function initDashboard() {
+  const feed = document.getElementById('activity-feed');
+  feed.innerHTML = activities.map(a => `
+    <div class="activity-item">
+      <div class="activity-dot-wrap"><div class="activity-dot" style="background:${a.color}"></div></div>
+      <div class="activity-content">
+        <div class="activity-title">${a.text}</div>
+        <div class="activity-time">${a.time}</div>
+      </div>
+    </div>`).join('');
+
+  const health = [
+    { name:'AI Chatbot',       status:'Online',  color:'var(--teal)' },
+    { name:'Lead Capture',     status:'Active',  color:'var(--teal)' },
+    { name:'CRM Pipeline',     status:'Active',  color:'var(--teal)' },
+    { name:'Email Drip',       status:'Running', color:'var(--teal)' },
+    { name:'Doc Generator',    status:'Ready',   color:'var(--blue)' },
+    { name:'Workflow Engine',  status:'Running', color:'var(--teal)' },
+  ];
+  document.getElementById('health-grid').innerHTML = health.map(h => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px">${h.name}</span>
+      <span class="chip" style="background:${h.color}22;color:${h.color}">● ${h.status}</span>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   CHATBOT (AI-Powered)
+═══════════════════════════════════════════════════ */
+let chatHistory = [];
+let isBotTyping = false;
+
+function addChatBubble(role, text, animate=true) {
+  const wrap = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  if (role === 'bot') {
+    div.innerHTML = `<div class="msg-avatar">🤖</div><div class="msg-bubble">${text}</div>`;
+  } else {
+    div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+  }
+  if (!animate) div.style.animation = 'none';
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function showBotTyping() {
+  const wrap = document.getElementById('chat-messages');
+  const t = document.createElement('div');
+  t.className = 'chat-msg bot'; t.id = 'typing-indicator';
+  t.innerHTML = `<div class="msg-avatar">🤖</div><div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+  wrap.appendChild(t); wrap.scrollTop = wrap.scrollHeight;
+}
+function hideBotTyping() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+async function sendChatMessage() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text || isBotTyping) return;
+  inp.value = '';
+  isBotTyping = true;
+
+  addChatBubble('user', escHtml(text));
+  chatHistory.push({ role:'user', content: text });
+
+  showBotTyping();
+
+  const persona = document.getElementById('cfg-persona')?.value || 'You are Sage AI, a helpful business assistant.';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: persona,
+        messages: chatHistory,
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b => b.type === 'text')?.text || "I'm here to help!";
+    chatHistory.push({ role: 'assistant', content: reply });
+    hideBotTyping();
+    addChatBubble('bot', escHtml(reply));
+
+    // Auto lead-capture heuristic
+    const lowerText = text.toLowerCase();
+    if ((lowerText.includes('price') || lowerText.includes('cost') || lowerText.includes('help') || lowerText.includes('contact') || lowerText.includes('demo')) && chatHistory.length > 4) {
+      setTimeout(() => {
+        addChatBubble('bot', "I'd love to connect you with our team! What's the best email to reach you?");
+        captureChatLead();
+      }, 800);
+    }
+  } catch(e) {
+    hideBotTyping();
+    addChatBubble('bot', "I'm Sage AI. Connect me to a real AI backend via the config to get live responses!");
+  }
+  isBotTyping = false;
+}
+
+function captureChatLead() {
+  const count = parseInt(document.getElementById('stat-leads').textContent) + 1;
+  document.getElementById('stat-leads').textContent = count;
+  document.getElementById('lead-total').textContent = count;
+  const badge = document.getElementById('leads-badge');
+  badge.textContent = parseInt(badge.textContent) + 1;
+  showToast('New lead captured via AI Chatbot!', 'success');
+  addLeadToTable({ name:'Chat Visitor', email:'visitor@chat.com', phone:'—', source:'AI Chatbot', status:'New' });
+}
+
+function updateChatConfig() {
+  const name = document.getElementById('cfg-name').value;
+  document.getElementById('chat-display-name').textContent = name;
+}
+
+function updateChatColor(val) {
+  document.querySelector('.chat-header').style.background = `linear-gradient(135deg, ${val}, ${darken(val)})`;
+  document.querySelectorAll('.msg-bubble').forEach(b => { if (b.closest('.user')) b.style.background = val; });
+  document.querySelectorAll('.chat-send-btn').forEach(b => b.style.background = val);
+}
+
+function darken(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, (n>>16)-30), g = Math.max(0, ((n>>8)&0xff)-30), b = Math.max(0, (n&0xff)-30);
+  return `#${((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1)}`;
+}
+
+function resetChatWithNewConfig() {
+  clearChat();
+  const greeting = document.getElementById('cfg-greeting').value;
+  addChatBubble('bot', escHtml(greeting));
+  chatHistory = [];
+  showToast('Chatbot config updated!', 'success');
+}
+
+function clearChat() {
+  document.getElementById('chat-messages').innerHTML = '';
+  chatHistory = [];
+}
+
+document.getElementById('chat-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+});
+
+/* ═══════════════════════════════════════════════════
+   LEADS
+═══════════════════════════════════════════════════ */
+let leadsData = [
+  { name:'Arman Shah',   email:'arman@techco.com',    phone:'+92 300 1234567', source:'AI Chatbot',    status:'New',       date:'Today' },
+  { name:'Sarah Chen',   email:'sarah@novastudio.io', phone:'+1 555 9876',     source:'Website Form',  status:'Contacted', date:'Today' },
+  { name:'David Kim',    email:'david@kinetics.co',   phone:'+1 555 4321',     source:'Social Media',  status:'Qualified', date:'Yesterday' },
+  { name:'Priya Mehta',  email:'priya@innovate.in',   phone:'+91 98765 43210', source:'Referral',      status:'Won',       date:'2 days ago' },
+  { name:'Carlos Ruiz',  email:'carlos@codelab.mx',   phone:'+52 55 1234567',  source:'AI Chatbot',    status:'Contacted', date:'3 days ago' },
+];
+
+const statusColors = { New:'chip-rose', Contacted:'chip-blue', Qualified:'chip-violet', Won:'chip-teal', Lost:'chip-amber' };
+
+function renderLeadsTable() {
+  const tbody = document.getElementById('leads-table');
+  tbody.innerHTML = leadsData.map((l,i) => `
+    <tr>
+      <td class="td-name">${escHtml(l.name)}</td>
+      <td>${escHtml(l.email)}</td>
+      <td>${escHtml(l.phone)}</td>
+      <td><span class="chip chip-blue">${escHtml(l.source)}</span></td>
+      <td><span class="chip ${statusColors[l.status]||'chip-blue'}">${escHtml(l.status)}</span></td>
+      <td>${escHtml(l.date)}</td>
+      <td>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="moveToCRM(${i})">→ CRM</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('lead-count-label').textContent = `Showing ${leadsData.length} leads`;
+  document.getElementById('lead-total').textContent = leadsData.length;
+}
+
+function addLeadToTable(lead) {
+  lead.date = lead.date || 'Just now';
+  leadsData.unshift(lead);
+  renderLeadsTable();
+}
+
+function addManualLead() {
+  const name = document.getElementById('l-name').value.trim();
+  const email = document.getElementById('l-email').value.trim();
+  const phone = document.getElementById('l-phone').value.trim();
+  const source = document.getElementById('l-source').value;
+  if (!name || !email) { showToast('Name and email are required', 'warn'); return; }
+  addLeadToTable({ name, email, phone: phone||'—', source, status:'New', date:'Just now' });
+  document.getElementById('l-name').value = '';
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-phone').value = '';
+  document.getElementById('lead-new').textContent = parseInt(document.getElementById('lead-new').textContent)+1;
+  showToast(`Lead added: ${name}`, 'success');
+  const badge = document.getElementById('leads-badge');
+  badge.textContent = parseInt(badge.textContent)+1;
+}
+
+function moveToCRM(idx) {
+  const l = leadsData[idx];
+  const stages = Object.keys(crmStages);
+  const targetStage = l.status === 'Qualified' ? 'Qualified' : 'New Lead';
+  addCRMCard(targetStage, { name: l.name, company: l.email, tags: [l.source] });
+  showToast(`${l.name} moved to CRM → ${targetStage}`, 'info');
+  switchPanel('crm');
+}
+
+function exportLeads() {
+  const headers = ['Name','Email','Phone','Source','Status','Date'];
+  const rows = leadsData.map(l => [l.name,l.email,l.phone,l.source,l.status,l.date]);
+  const csv = [headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'sage-leads.csv';
+  a.click();
+  showToast('Leads exported as CSV', 'success');
+}
+
+/* ═══════════════════════════════════════════════════
+   CRM PIPELINE
+═══════════════════════════════════════════════════ */
+const crmStages = {
+  'New Lead':      { color:'var(--blue)',   deals: [
+    { name:'Arman Shah',   company:'TechCo',      tags:['AI Chatbot','Hot'] },
+    { name:'Maria López',  company:'CreativeHub',  tags:['Website'] },
+  ]},
+  'Contacted':     { color:'var(--violet)', deals: [
+    { name:'Sarah Chen',   company:'Nova Studio',  tags:['Follow-up'] },
+    { name:'Carlos Ruiz',  company:'CodeLab',      tags:['Demo'] },
+  ]},
+  'Qualified':     { color:'var(--amber)',  deals: [
+    { name:'David Kim',    company:'Kinetics',     tags:['High Value'] },
+  ]},
+  'Proposal Sent': { color:'var(--teal)',   deals: [
+    { name:'Priya Mehta',  company:'Innovate Inc', tags:['$4,200'] },
+  ]},
+  'Won':           { color:'var(--green)',  deals: [
+    { name:'TechCorp Ltd', company:'Enterprise',   tags:['$8,500','Closed'] },
+  ]},
+};
+
+let draggedCard = null;
+let draggedFrom = null;
+
+function renderCRMPipeline() {
+  const pipeline = document.getElementById('crm-pipeline');
+  pipeline.innerHTML = Object.entries(crmStages).map(([stage, data]) => `
+    <div class="pipeline-col" data-stage="${stage}"
+         ondragover="onDragOver(event)" ondrop="onDrop(event,this)" ondragleave="this.classList.remove('drag-over')">
+      <div class="pipeline-col-header">
+        <span style="color:${data.color}">${stage}</span>
+        <span class="pipeline-count">${data.deals.length}</span>
+      </div>
+      <div class="pipeline-cards" id="stage-${stage.replace(/ /g,'_')}">
+        ${data.deals.map((d,i) => renderCRMCard(d, stage, i)).join('')}
+      </div>
+    </div>`).join('');
+
+  // Attach drag events
+  document.querySelectorAll('.crm-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      draggedCard = card;
+      draggedFrom = card.closest('.pipeline-col').dataset.stage;
+      setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  });
+}
+
+function renderCRMCard(deal, stage, idx) {
+  return `<div class="crm-card" draggable="true" data-name="${deal.name}" data-stage="${stage}" data-idx="${idx}">
+    <div class="crm-card-name">${escHtml(deal.name)}</div>
+    <div class="crm-card-meta">${escHtml(deal.company)}</div>
+    <div class="crm-card-tags">${deal.tags.map(t => `<span class="chip chip-blue" style="font-size:10px">${escHtml(t)}</span>`).join('')}</div>
+  </div>`;
+}
+
+function addCRMCard(stage, deal) {
+  if (!crmStages[stage]) stage = 'New Lead';
+  crmStages[stage].deals.unshift(deal);
+  renderCRMPipeline();
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDrop(e, col) {
+  e.preventDefault();
+  col.classList.remove('drag-over');
+  if (!draggedCard || !draggedFrom) return;
+  const toStage = col.dataset.stage;
+  if (toStage === draggedFrom) return;
+  const name = draggedCard.dataset.name;
+  const fromDeals = crmStages[draggedFrom].deals;
+  const idx = fromDeals.findIndex(d => d.name === name);
+  if (idx === -1) return;
+  const [moved] = fromDeals.splice(idx, 1);
+  crmStages[toStage].deals.push(moved);
+  renderCRMPipeline();
+  showToast(`${name} → ${toStage}`, 'info');
+  addWorkflowLogEntry(`CRM: ${name} moved to "${toStage}"`);
+}
+
+let newDealCount = 0;
+function addDemoLead() {
+  const names = ['Alex Jordan','Taylor Brooks','Jamie Rivera','Morgan Pierce'];
+  newDealCount++;
+  addCRMCard('New Lead', { name: names[newDealCount % names.length], company: 'New Client', tags: ['Fresh'] });
+  showToast('New deal added to pipeline!', 'success');
+}
+
+/* ═══════════════════════════════════════════════════
+   EMAIL DRIP
+═══════════════════════════════════════════════════ */
+const dripEmails = [
+  { delay:'Immediately', subject:'Welcome to Sage AI 🤖', preview:'Thank you for reaching out! I wanted to personally introduce you to what Sage AI can do for your business. Here\'s a quick overview of how we help companies automate their growth...', open:'94%', click:'67%' },
+  { delay:'Day 2', subject:'Quick follow-up + a question', preview:'I wanted to check in and see if you had a chance to explore the platform. Many of our clients see immediate results in lead capture within the first 48 hours. Do you have 15 minutes this week?', open:'78%', click:'45%' },
+  { delay:'Day 5', subject:'How FinTech Co saved 20 hrs/week', preview:'I thought you\'d find this case study relevant. FinTech Co integrated Sage AI and reduced their manual follow-up time by 80%. Their lead-to-close rate jumped by 35% in just 6 weeks...', open:'65%', click:'38%' },
+  { delay:'Day 10', subject:'Last chance — special offer inside', preview:'I don\'t want you to miss this. We\'re offering a limited onboarding package this month that includes full setup, 3 months of support, and a custom AI persona at no extra cost. Spots are filling fast...', open:'71%', click:'52%' },
+];
+
+function renderDripSequence() {
+  document.getElementById('drip-sequence').innerHTML = dripEmails.map((e,i) => `
+    <div class="drip-step">
+      <div class="drip-step-num">${i+1}</div>
+      <div class="drip-content">
+        <div class="drip-delay">⏱ ${e.delay}</div>
+        <div class="drip-subject">${e.subject}</div>
+        <div class="drip-preview">${e.preview}</div>
+        <div class="drip-stats">
+          <span class="drip-stat">Opens: <span>${e.open}</span></span>
+          <span class="drip-stat">Clicks: <span>${e.click}</span></span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('campaign-stats').innerHTML = `
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Total Subscribers</span><strong>247</strong></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Avg Open Rate</span><strong style="color:var(--teal)">77%</strong></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Avg Click Rate</span><strong style="color:var(--blue)">51%</strong></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Unsubscribes</span><strong style="color:var(--rose)">2.1%</strong></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Revenue Attributed</span><strong style="color:var(--amber)">$18,400</strong></div>`;
+}
+
+function quickSendEmail() {
+  const email = document.getElementById('quick-email').value.trim();
+  if (!email) { showToast('Enter a recipient email', 'warn'); return; }
+  const template = document.getElementById('quick-template').value;
+  showToast(`Email sent to ${email} — ${template}`, 'success');
+  addWorkflowLogEntry(`Email: "${template}" sent to ${email}`);
+  document.getElementById('quick-email').value = '';
+}
+
+/* ═══════════════════════════════════════════════════
+   DOCUMENT GENERATOR
+═══════════════════════════════════════════════════ */
+const docTemplates = {
+  Proposal: (d) => `BUSINESS PROPOSAL
+══════════════════════════════════
+Prepared for: ${d.name||'[Client Name]'}
+Company:      ${d.company||'[Company]'}
+Date:         ${d.date||'[Date]'}
+Valid until:  ${d.valid||'30 days'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXECUTIVE SUMMARY
+
+This proposal outlines how Sage AI can 
+deliver ${d.service||'[Service]'} tailored 
+specifically for ${d.company||'[Company]'}.
+
+SCOPE OF WORK
+• AI Chatbot integration & configuration
+• Lead capture system setup
+• CRM pipeline automation
+• Email drip campaign setup
+• 30-day onboarding support
+
+INVESTMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Service:  ${d.service||'[Service]'}
+Total:    ${d.price||'[Price]'}
+Payment:  50% upfront, 50% on delivery
+
+NOTES
+${d.notes||'—'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sage AI Platform · sage.ai`,
+
+  Contract: (d) => `SERVICE CONTRACT
+══════════════════════════════════
+Client:    ${d.name||'[Client]'}
+Company:   ${d.company||'[Company]'}
+Date:      ${d.date||'[Date]'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SERVICES AGREED
+
+The service provider agrees to deliver:
+${d.service||'[Service Description]'}
+
+PAYMENT TERMS
+Total: ${d.price||'[Price]'}
+Due:   ${d.valid||'Net 30 days'}
+
+TERMS & CONDITIONS
+1. All deliverables to be completed within 
+   the agreed timeline.
+2. Client to provide all necessary assets 
+   within 5 business days of signing.
+3. Revisions are included up to 2 rounds.
+4. Either party may terminate with 14 days 
+   written notice.
+
+NOTES
+${d.notes||'—'}
+
+Signed: _________________ Date: _______
+        ${d.name||'Client'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sage AI Platform · sage.ai`,
+
+  Invoice: (d) => `INVOICE
+══════════════════════════════════
+Invoice #: INV-${Math.floor(Math.random()*9000)+1000}
+Date:      ${d.date||'[Date]'}
+Due date:  ${d.valid||'Net 30'}
+
+Bill to:
+  ${d.name||'[Client]'}
+  ${d.company||'[Company]'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESCRIPTION                    AMOUNT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${(d.service||'Service').padEnd(30)} ${d.price||'$0.00'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUBTOTAL:                   ${d.price||'$0.00'}
+TAX (0%):                   $0.00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOTAL DUE:                  ${d.price||'$0.00'}
+
+Payment methods: Bank transfer, PayPal
+Reference: ${d.name||'Client'} - ${d.service||'Service'}
+
+NOTES
+${d.notes||'Thank you for your business!'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sage AI Platform · sage.ai`,
+};
+
+function getDocData() {
+  return {
+    name:    document.getElementById('doc-name')?.value||'',
+    company: document.getElementById('doc-company')?.value||'',
+    service: document.getElementById('doc-service')?.value||'',
+    price:   document.getElementById('doc-price')?.value||'',
+    date:    document.getElementById('doc-date')?.value||new Date().toLocaleDateString(),
+    valid:   document.getElementById('doc-valid')?.value||'',
+    notes:   document.getElementById('doc-notes')?.value||'',
+  };
+}
+
+function renderDocPreview() {
+  const type = document.getElementById('doc-type')?.value || 'Proposal';
+  const tpl = docTemplates[type];
+  if (!tpl) return;
+  const text = tpl(getDocData());
+  document.getElementById('doc-preview').textContent = text;
+}
+
+function generateDoc() {
+  renderDocPreview();
+  showToast('Document generated!', 'success');
+  addWorkflowLogEntry(`Doc: ${document.getElementById('doc-type').value} generated for ${document.getElementById('doc-name').value||'client'}`);
+}
+
+function copyDoc() {
+  const text = document.getElementById('doc-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Document copied to clipboard!', 'success'));
+}
+
+/* ═══════════════════════════════════════════════════
+   WORKFLOW ENGINE
+═══════════════════════════════════════════════════ */
+const workflowRules = [
+  { icon:'🤖', color:'var(--blue-soft)',   name:'AI Lead → CRM Auto-Create',  desc:'Creates a CRM card for every AI-captured lead', if:'AI Chatbot lead captured', then:'Create CRM card in New Lead', on:true },
+  { icon:'📧', color:'var(--teal-soft)',   name:'New Lead → Email Drip',       desc:'Starts drip campaign when lead is added',         if:'Lead status = New',          then:'Send Email 1 immediately',   on:true },
+  { icon:'🏆', color:'var(--amber-soft)',  name:'Deal Won → Invoice',          desc:'Auto-generates invoice when deal marked Won',      if:'CRM stage = Won',            then:'Generate invoice',           on:true },
+  { icon:'📋', color:'var(--violet-soft)', name:'Qualified → Notify Admin',    desc:'Sends Slack/email alert for qualified leads',      if:'Lead status = Qualified',    then:'Notify admin via webhook',   on:true },
+  { icon:'🔁', color:'var(--green-soft)',  name:'Proposal Sent → Follow-Up',   desc:'Sends follow-up email after 3 days if no reply',   if:'Stage = Proposal Sent',      then:'Send follow-up email Day 3', on:false },
+  { icon:'📄', color:'var(--rose-soft)',   name:'Won Deal → Onboarding Doc',   desc:'Auto-creates onboarding proposal on deal close',   if:'CRM stage = Won',            then:'Generate onboarding doc',    on:false },
+];
+
+const workflowLog = [];
+
+function addWorkflowLogEntry(msg) {
+  const time = new Date().toLocaleTimeString();
+  workflowLog.unshift({ msg, time });
+  renderWorkflowLog();
+}
+
+function renderWorkflowLog() {
+  const el = document.getElementById('workflow-log');
+  if (!el) return;
+  el.innerHTML = workflowLog.slice(0,20).map(e => `
+    <div style="padding:8px;background:var(--surface2);border-radius:6px;border-left:2px solid var(--teal)">
+      <div style="color:var(--teal);font-size:12px">✓ ${escHtml(e.msg)}</div>
+      <div style="color:var(--text3);font-size:10px;margin-top:2px">${e.time}</div>
+    </div>`).join('') || '<div style="color:var(--text3)">No activity yet…</div>';
+}
+
+function renderWorkflowList() {
+  document.getElementById('workflow-list').innerHTML = workflowRules.map((r,i) => `
+    <div class="workflow-rule">
+      <div class="workflow-toggle ${r.on?'on':''}" onclick="toggleWorkflow(${i},this)"></div>
+      <div class="workflow-icon" style="background:${r.color}">${r.icon}</div>
+      <div class="workflow-info">
+        <div class="workflow-name">${escHtml(r.name)}</div>
+        <div class="workflow-desc">${escHtml(r.desc)}</div>
+        <div class="workflow-rule-chain" style="margin-top:8px">
+          <span class="rule-if">IF ${escHtml(r.if)}</span>
+          <span class="rule-arrow">→</span>
+          <span class="rule-then">THEN ${escHtml(r.then)}</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="triggerWorkflow(${i})">▶ Run</button>
+    </div>`).join('');
+}
+
+function toggleWorkflow(i, el) {
+  workflowRules[i].on = !workflowRules[i].on;
+  el.classList.toggle('on');
+  showToast(`Workflow ${workflowRules[i].on ? 'enabled' : 'disabled'}: ${workflowRules[i].name}`, 'info');
+}
+
+function triggerWorkflow(i) {
+  const r = workflowRules[i];
+  showToast(`Running: ${r.name}`, 'success');
+  addWorkflowLogEntry(`Workflow triggered: "${r.name}"`);
+}
+
+let ruleCount = workflowRules.length;
+function addWorkflowRule() {
+  workflowRules.push({
+    icon: '⚡',
+    color: 'var(--amber-soft)',
+    name: `Custom Rule #${++ruleCount}`,
+    desc: 'Click ▶ Run to test this rule',
+    if: 'Custom trigger',
+    then: 'Custom action',
+    on: false
+  });
+  renderWorkflowList();
+  showToast('New workflow rule added', 'success');
+}
+
+/* ═══════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════ */
+function escHtml(str) {
+  return String(str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+function init() {
+  initDashboard();
+
+  // Chatbot init
+  addChatBubble('bot', document.getElementById('cfg-greeting')?.value || '👋 Hi! I\'m Sage AI. How can I help you today?');
+
+  // Leads
+  renderLeadsTable();
+
+  // CRM
+  renderCRMPipeline();
+
+  // Email
+  renderDripSequence();
+
+  // Docs
+  document.getElementById('doc-date').value = new Date().toLocaleDateString();
+  renderDocPreview();
+
+  // Workflow
+  renderWorkflowList();
+  renderWorkflowLog();
+
+  // Simulate live activity
+  const liveEvents = [
+    () => { showToast('New lead via chatbot: Hassan Ali', 'success'); addWorkflowLogEntry('AI lead captured: Hassan Ali'); },
+    () => { showToast('Email drip Email 3 sent to 12 contacts', 'info'); addWorkflowLogEntry('Drip Email 3 batch sent (12 contacts)'); },
+    () => { showToast('Deal moved: CreativeHub → Qualified', 'info'); },
+  ];
+  let ei = 0;
+  setInterval(() => {
+    if (ei < liveEvents.length) { liveEvents[ei](); ei++; }
+  }, 12000);
+}
+
+init();
+</script>
 </body>
 </html>

@@ -1,257 +1,177 @@
-# Sage AI Assistant Widget
+# 🚀 Sage AI Assistant
 
-A production-ready, zero-dependency, embeddable AI chatbot widget.  
-Drop **one `<script>` tag** into any website to add a full-featured floating chat interface.
+**Sage AI Assistant** is a complete AI-powered business automation system that combines:
 
----
+- AI Chatbot (customer engagement)
+- Lead Capture System
+- CRM Automation (pipeline simulation)
+- Email Drip Campaign Engine
+- Document Generation & Client Onboarding
+- Workflow Automation Engine
 
-## Files
-
-| File | Purpose |
-|---|---|
-| `sage-ai.js` | Main widget script — all logic lives here |
-| `sage-ai.css` | Styles — scoped to `#sage-ai-widget`, safe to embed anywhere |
-| `index.html` | Demo page — open locally or deploy as a landing page |
-| `README.md` | This file |
+It is designed for businesses that want to automate customer interactions and turn website visitors into paying clients.
 
 ---
 
-## 1 — Hosting the Files
+## 💡 What This System Does
 
-### Option A — Your own server / CDN
+Sage AI Assistant is NOT just a chatbot.
 
-Upload `sage-ai.js` and `sage-ai.css` to any static host (S3, Cloudflare R2, Netlify, Vercel, GitHub Pages, etc.).
+It is a full **AI Business Automation Engine** that:
 
-Make sure both files are served from the **same directory** so the JS can find the CSS automatically.  
-Or update `CONFIG.cssHref` in `sage-ai.js` to an absolute URL:
-
-```js
-cssHref: "https://cdn.example.com/sage-ai.css",
-```
-
-### Option B — GitHub Pages (free)
-
-1. Create a public GitHub repository.
-2. Push both files to the `main` branch (or `/docs` folder).
-3. Enable **Settings → Pages** → Source: `main` branch.
-4. Your widget is live at `https://<username>.github.io/<repo>/sage-ai.js`.
-
-### Option C — Netlify Drop (30 seconds)
-
-1. Zip the folder.
-2. Drag it to [app.netlify.com/drop](https://app.netlify.com/drop).
-3. Done — instant CDN URL.
+✔ Engages website visitors using AI  
+✔ Captures leads automatically  
+✔ Sends data to CRM pipelines  
+✔ Triggers email follow-ups  
+✔ Simulates client onboarding workflows  
+✔ Automates internal business processes  
 
 ---
 
-## 2 — Embedding the Chatbot
+## ⚙️ Core Modules
 
-Add this **single line** before the closing `</body>` tag of any webpage:
-
-```html
-<script src="https://yourdomain.com/sage-ai.js"></script>
-```
-
-No other dependencies, no npm, no build step. The widget creates its own DOM, styles, and storage.
-
-### Programmatic control (optional)
-
-After the script loads, `window.SageAI` exposes a small public API:
-
-```js
-SageAI.open();          // Open chat window
-SageAI.close();         // Close chat window
-SageAI.toggle();        // Toggle open/closed
-SageAI.clearHistory();  // Wipe localStorage and reload
-SageAI.getState();      // Returns a copy of the runtime state object
-SageAI.setConfig({ primaryColor: "#7c3aed" }); // Update config live
-```
+### 🤖 AI Chatbot (Sage AI Assistant)
+A floating AI assistant that answers user queries and guides visitors.
 
 ---
 
-## 3 — Changing the Branding
+### 📋 Lead Capture System
+Automatically collects:
+- Name
+- Email
+- Phone
+- Company (optional)
 
-Open `sage-ai.js` and edit the `CONFIG` object at the top of the file:
-
-```js
-const CONFIG = {
-  companyName:    "Your Company Name",
-  primaryColor:   "#7c3aed",          // Any valid CSS colour
-  accentColor:    "#6d28d9",          // Darker hover/gradient shade
-  secondaryColor: "#faf5ff",
-  welcomeMessage: "Hi! How can we help you today?",
-  subtitle:       "Online · Typically replies in minutes",
-  logo:           "https://example.com/logo.png",  // or "" to use emoji
-  logoEmoji:      "🟣",               // Used when logo is empty
-  darkMode:       "auto",             // "auto" | "light" | "dark"
-  showFooter:     true,
-};
-```
-
-Every change to `CONFIG` is reflected immediately — no build step required.
+All leads are stored in a unified system and can be routed to CRM or automation tools.
 
 ---
 
-## 4 — Connecting an AI Backend
+### 🧠 CRM Automation System (Simulation + Real Integration Ready)
+Visual pipeline system that manages leads through stages:
 
-Set `CONFIG.aiApiEndpoint` to your backend URL:
+- New Lead
+- Contacted
+- Qualified
+- Proposal Sent
+- Won / Lost
 
-```js
-aiApiEndpoint: "https://api.yourapp.com/chat",
-```
-
-### Expected request (POST)
-
-```json
-{
-  "message": "What are your business hours?",
-  "conversation_id": "uuid-string",
-  "history": [ { "role": "user", "text": "...", "time": 1700000000000 } ]
-}
-```
-
-### Expected response
-
-```json
-{ "reply": "We're open Monday–Friday, 9 am – 6 pm." }
-```
-
-To trigger automatic lead capture from your backend, include:
-
-```json
-{ "capture_lead": true }
-```
-
-### Connecting OpenAI
-
-Create a thin serverless function (Vercel, Cloudflare Workers, etc.):
-
-```js
-// api/chat.js (Vercel Edge Function example)
-import OpenAI from "openai";
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export default async function handler(req) {
-  const { message, history = [] } = await req.json();
-  const messages = [
-    { role: "system", content: "You are a helpful assistant." },
-    ...history.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
-    { role: "user", content: message },
-  ];
-  const completion = await client.chat.completions.create({ model: "gpt-4o", messages });
-  return Response.json({ reply: completion.choices[0].message.content });
-}
-```
-
-### Connecting Claude (Anthropic)
-
-```js
-// api/chat.js
-import Anthropic from "@anthropic-ai/sdk";
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-export default async function handler(req) {
-  const { message, history = [] } = await req.json();
-  const messages = [
-    ...history.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
-    { role: "user", content: message },
-  ];
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
-    system: "You are a helpful assistant.",
-    messages,
-  });
-  return Response.json({ reply: response.content[0].text });
-}
-```
+Leads can be:
+- Moved between stages
+- Tagged
+- Tracked with notes
 
 ---
 
-## 5 — Connecting a Make.com Webhook
+### 📧 Email Drip Campaign Engine
+Automated follow-up system:
 
-1. In Make.com, create a new **Scenario**.
-2. Add a **Webhooks → Custom webhook** trigger — copy the URL it gives you.
-3. Paste it into `CONFIG.webhookUrl`:
+- Email 1 → Instant response
+- Email 2 → Follow-up
+- Email 3 → Case study
+- Email 4 → Conversion message
 
-```js
-webhookUrl: "https://hook.eu1.make.com/xxxxxxxxxxxxxxxxxxxx",
-```
-
-The widget will POST this payload when lead data is collected:
-
-```json
-{
-  "name": "Jane Smith",
-  "email": "jane@example.com",
-  "phone": "+1 555 0100",
-  "conversation": [ { "role": "user", "text": "...", "time": 1700000000000 } ],
-  "timestamp": "2025-01-01T12:00:00.000Z",
-  "conversation_id": "uuid-string"
-}
-```
-
-Use Make.com modules to route this into Gmail, Slack, Notion, HubSpot, or any other app.
+Can be connected to Make.com, Zapier, or backend APIs.
 
 ---
 
-## 6 — Connecting Zoho CRM
+### 📄 Document Auto-Assembly System
+Automatically generates:
 
-### Option A — via Make.com (recommended)
+- Proposals
+- Contracts
+- Invoices
 
-Use the Make.com webhook (step 5) and add a **Zoho CRM → Create Record** module.  
-Map the fields: `name → Last Name`, `email → Email`, `phone → Phone`.
+Uses dynamic templates:
 
-### Option B — Direct Zoho API
-
-1. Create a Zoho OAuth app and get a `client_id` / `client_secret`.
-2. Build a small backend endpoint that exchanges the lead payload for a Zoho API call:
-
-```js
-// POST to Zoho CRM Leads endpoint
-fetch("https://www.zohoapis.com/crm/v2/Leads", {
-  method: "POST",
-  headers: {
-    "Authorization": `Zoho-oauthtoken ${ACCESS_TOKEN}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    data: [{
-      Last_Name: leadData.name,
-      Email:     leadData.email,
-      Phone:     leadData.phone,
-      Lead_Source: "Website Chat",
-    }],
-  }),
-});
-```
-
-Set `CONFIG.webhookUrl` to your backend endpoint.
+{{name}}  
+{{company}}  
+{{service}}  
+{{price}}
 
 ---
 
-## Future Expansion Hooks
+### 🔁 Workflow Automation Engine
+Rule-based automation system:
 
-The widget is structured for easy extension without touching core logic:
+IF → THEN logic examples:
 
-| Feature | What to do |
-|---|---|
-| **RAG / Knowledge base** | On your backend, embed the user query, retrieve top-K chunks, and prepend them to the system prompt before calling the LLM. No frontend changes needed. |
-| **Streaming responses** | Replace the `fetch` call in `sendToAI()` with an SSE / EventSource reader and append text chunks incrementally. |
-| **File uploads** | Add a file input button to `#sage-input-area` and send base64 data in the API request body. |
-| **Multi-language** | Add a `CONFIG.locale` key and translate the hardcoded strings at the top of `sage-ai.js`. |
-| **Analytics** | Call your analytics SDK inside `appendMessage()` when `role === "user"`. |
-| **Auth / user identity** | Pass a JWT or session token in the `sendToAI()` fetch headers. |
+- If lead is qualified → notify admin
+- If deal is won → generate invoice
+- If chatbot lead → tag as AI-generated lead
 
 ---
 
-## Browser Support
+## 🔗 Integrations
 
-Chrome 80+, Firefox 75+, Safari 14+, Edge 80+, iOS Safari 14+.  
-Uses `fetch`, `localStorage`, `crypto.randomUUID` (with fallback), and CSS custom properties.
+Sage AI Assistant connects with:
+
+- Make.com (automation workflows)
+- Zoho CRM (lead management)
+- OpenAI / Claude APIs (AI backend)
+- Email services (Gmail, SMTP, etc.)
+- Webhooks (custom automation pipelines)
 
 ---
 
-## License
+## 🧩 Use Cases
 
-MIT — free to use, modify, and distribute.
+This system can be used for:
+
+- AI agency websites
+- SaaS landing pages
+- Lead generation funnels
+- Automation agencies
+- Freelance client systems
+- CRM training & simulation
+
+---
+
+## ⚡ Why This Project Is Powerful
+
+This is not a static website.
+
+It demonstrates:
+
+- AI integration
+- CRM system design
+- Marketing automation
+- Business workflow engineering
+- Real-world SaaS architecture
+
+---
+
+## 🚀 Deployment
+
+You can deploy this project on:
+
+- Vercel
+- Netlify
+- GitHub Pages
+
+No build tools required.
+
+---
+
+## 📌 Tech Stack
+
+- HTML
+- CSS
+- Vanilla JavaScript
+- LocalStorage (data persistence)
+- Webhooks (Make.com / CRM integration ready)
+
+---
+
+## 🎯 Vision
+
+Sage AI Assistant is designed as a **mini business operating system** that transforms websites into automated sales and customer management machines.
+
+---
+
+## 🧠 Future Expansion
+
+- Full CRM backend
+- AI agent workflows
+- WhatsApp automation
+- Calendar booking system
+- Multi-agent AI support system

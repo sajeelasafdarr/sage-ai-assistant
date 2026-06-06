@@ -1,0 +1,608 @@
+/* ============================================================
+   SAGE AI ASSISTANT - Chat Widget Stylesheet
+   Version: 1.0.0
+   Description: Floating chatbot widget styles
+   ============================================================ */
+
+/* ── Reset & Base ───────────────────────────────────────────── */
+#sage-ai-widget * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── CSS Variables (Light Mode) ─────────────────────────────── */
+#sage-ai-widget {
+  --sage-primary:       #2563eb;
+  --sage-primary-dark:  #1e40af;
+  --sage-primary-light: #eff6ff;
+  --sage-bg:            #ffffff;
+  --sage-surface:       #f8fafc;
+  --sage-border:        #e2e8f0;
+  --sage-text:          #0f172a;
+  --sage-text-muted:    #64748b;
+  --sage-user-bubble:   #2563eb;
+  --sage-user-text:     #ffffff;
+  --sage-bot-bubble:    #f1f5f9;
+  --sage-bot-text:      #0f172a;
+  --sage-shadow-sm:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --sage-shadow-md:     0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+  --sage-shadow-lg:     0 20px 48px rgba(37,99,235,.18), 0 8px 16px rgba(0,0,0,.08);
+  --sage-radius-sm:     8px;
+  --sage-radius-md:     14px;
+  --sage-radius-lg:     20px;
+  --sage-radius-xl:     24px;
+  --sage-anim:          cubic-bezier(.34,1.56,.64,1);
+  --sage-anim-smooth:   cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Dark Mode ──────────────────────────────────────────────── */
+#sage-ai-widget[data-theme="dark"] {
+  --sage-bg:            #0f172a;
+  --sage-surface:       #1e293b;
+  --sage-border:        #334155;
+  --sage-text:          #f1f5f9;
+  --sage-text-muted:    #94a3b8;
+  --sage-bot-bubble:    #1e293b;
+  --sage-bot-text:      #f1f5f9;
+  --sage-shadow-lg:     0 20px 48px rgba(0,0,0,.5), 0 8px 16px rgba(0,0,0,.3);
+}
+
+/* ── Floating Toggle Button ─────────────────────────────────── */
+#sage-toggle-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--sage-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,99,235,.4), 0 2px 8px rgba(0,0,0,.15);
+  transition: transform .25s var(--sage-anim), box-shadow .25s var(--sage-anim-smooth);
+  z-index: 2147483646;
+  outline: none;
+}
+
+#sage-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 28px rgba(37,99,235,.5), 0 4px 12px rgba(0,0,0,.2);
+}
+
+#sage-toggle-btn:active {
+  transform: scale(.96);
+}
+
+#sage-toggle-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .3s var(--sage-anim), opacity .2s;
+  position: absolute;
+}
+
+#sage-toggle-btn .icon-chat  { opacity: 1;  transform: scale(1) rotate(0deg); }
+#sage-toggle-btn .icon-close { opacity: 0;  transform: scale(.5) rotate(-90deg); }
+
+#sage-toggle-btn.open .icon-chat  { opacity: 0;  transform: scale(.5) rotate(90deg); }
+#sage-toggle-btn.open .icon-close { opacity: 1;  transform: scale(1) rotate(0deg); }
+
+/* Notification badge */
+#sage-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  animation: sage-badge-pop .4s var(--sage-anim);
+}
+
+#sage-badge.visible { display: flex; }
+
+@keyframes sage-badge-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── Chat Window ─────────────────────────────────────────────── */
+#sage-chat-window {
+  position: fixed;
+  bottom: 96px;
+  right: 24px;
+  width: 368px;
+  height: 540px;
+  border-radius: var(--sage-radius-xl);
+  background: var(--sage-bg);
+  border: 1px solid var(--sage-border);
+  box-shadow: var(--sage-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 2147483645;
+
+  /* Hidden state */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px) scale(.97);
+  transform-origin: bottom right;
+  transition:
+    opacity .3s var(--sage-anim-smooth),
+    transform .35s var(--sage-anim),
+    box-shadow .3s var(--sage-anim-smooth);
+}
+
+#sage-chat-window.open {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+#sage-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--sage-primary);
+  background: linear-gradient(135deg, var(--sage-primary) 0%, var(--sage-primary-dark) 100%);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#sage-header::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  pointer-events: none;
+}
+
+#sage-header::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: 30px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+  pointer-events: none;
+}
+
+#sage-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  border: 2px solid rgba(255,255,255,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 18px;
+}
+
+#sage-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+#sage-header-info { flex: 1; min-width: 0; }
+
+#sage-header-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#sage-header-subtitle {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.75);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+#sage-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74,222,128,.3);
+  animation: sage-pulse 2s infinite;
+}
+
+@keyframes sage-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(74,222,128,.0); }
+}
+
+/* Header action buttons */
+#sage-header-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.sage-header-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.12);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, transform .15s;
+  outline: none;
+}
+
+.sage-header-btn:hover {
+  background: rgba(255,255,255,.22);
+  transform: scale(1.05);
+}
+
+.sage-header-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: rgba(255,255,255,.9);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Messages Area ───────────────────────────────────────────── */
+#sage-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+#sage-messages::-webkit-scrollbar { width: 4px; }
+#sage-messages::-webkit-scrollbar-track { background: transparent; }
+#sage-messages::-webkit-scrollbar-thumb {
+  background: var(--sage-border);
+  border-radius: 4px;
+}
+
+/* Date separator */
+.sage-date-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  color: var(--sage-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.sage-date-sep::before,
+.sage-date-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sage-border);
+}
+
+/* Message rows */
+.sage-msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 6px;
+  animation: sage-msg-in .35s var(--sage-anim) both;
+}
+
+@keyframes sage-msg-in {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sage-msg-row.user  { flex-direction: row-reverse; }
+.sage-msg-row.bot   { flex-direction: row; }
+
+/* Bot avatar in message list */
+.sage-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--sage-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+/* Bubble */
+.sage-bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: var(--sage-radius-md);
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  position: relative;
+}
+
+.sage-msg-row.user .sage-bubble {
+  background: var(--sage-user-bubble);
+  color: var(--sage-user-text);
+  border-bottom-right-radius: 4px;
+}
+
+.sage-msg-row.bot .sage-bubble {
+  background: var(--sage-bot-bubble);
+  color: var(--sage-bot-text);
+  border-bottom-left-radius: 4px;
+}
+
+/* Timestamp */
+.sage-ts {
+  font-size: 10.5px;
+  color: var(--sage-text-muted);
+  margin-top: 3px;
+  padding: 0 4px;
+  align-self: flex-end;
+}
+
+.sage-msg-row.user .sage-ts { text-align: right; }
+
+/* ── Typing Indicator ────────────────────────────────────────── */
+#sage-typing {
+  display: none;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 16px 8px;
+  animation: sage-msg-in .25s var(--sage-anim) both;
+}
+
+#sage-typing.visible { display: flex; }
+
+.sage-typing-bubble {
+  background: var(--sage-bot-bubble);
+  border-radius: var(--sage-radius-md);
+  border-bottom-left-radius: 4px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sage-typing-label {
+  font-size: 11px;
+  color: var(--sage-text-muted);
+  margin-bottom: 4px;
+}
+
+.sage-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sage-text-muted);
+  animation: sage-bounce 1.2s infinite;
+}
+
+.sage-dot:nth-child(2) { animation-delay: .15s; }
+.sage-dot:nth-child(3) { animation-delay: .30s; }
+
+@keyframes sage-bounce {
+  0%,60%,100% { transform: translateY(0); opacity: .5; }
+  30%          { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Lead Capture Form Styles ────────────────────────────────── */
+.sage-input-field {
+  background: var(--sage-surface);
+  border: 1.5px solid var(--sage-border);
+  border-radius: var(--sage-radius-sm);
+  padding: 9px 13px;
+  font-size: 14px;
+  color: var(--sage-text);
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+  margin-top: 6px;
+  display: block;
+}
+
+.sage-input-field:focus {
+  border-color: var(--sage-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.sage-input-field::placeholder { color: var(--sage-text-muted); }
+
+/* ── Input Bar ───────────────────────────────────────────────── */
+#sage-input-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--sage-border);
+  background: var(--sage-bg);
+  flex-shrink: 0;
+}
+
+#sage-input {
+  flex: 1;
+  min-height: 42px;
+  max-height: 120px;
+  resize: none;
+  border: 1.5px solid var(--sage-border);
+  border-radius: var(--sage-radius-lg);
+  padding: 11px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--sage-text);
+  background: var(--sage-surface);
+  outline: none;
+  overflow-y: auto;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+}
+
+#sage-input:focus {
+  border-color: var(--sage-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+
+#sage-input::placeholder { color: var(--sage-text-muted); }
+
+#sage-send-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--sage-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s, transform .2s var(--sage-anim), box-shadow .15s;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+
+#sage-send-btn:hover {
+  background: var(--sage-primary-dark);
+  transform: scale(1.08);
+}
+
+#sage-send-btn:active { transform: scale(.94); }
+
+#sage-send-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#sage-send-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: translateX(1px);
+}
+
+/* ── Footer Branding ─────────────────────────────────────────── */
+#sage-footer {
+  text-align: center;
+  padding: 6px 14px 10px;
+  font-size: 10.5px;
+  color: var(--sage-text-muted);
+  background: var(--sage-bg);
+  border-top: 1px solid var(--sage-border);
+  flex-shrink: 0;
+}
+
+#sage-footer a {
+  color: var(--sage-primary);
+  text-decoration: none;
+}
+
+/* ── Success / Error States ──────────────────────────────────── */
+.sage-success-msg {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--sage-radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sage-error-msg {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: var(--sage-radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ── Dark mode success/error overrides ───────────────────────── */
+#sage-ai-widget[data-theme="dark"] .sage-success-msg {
+  background: rgba(74,222,128,.1);
+  border-color: rgba(74,222,128,.3);
+  color: #4ade80;
+}
+
+#sage-ai-widget[data-theme="dark"] .sage-error-msg {
+  background: rgba(248,113,113,.1);
+  border-color: rgba(248,113,113,.3);
+  color: #f87171;
+}
+
+/* ── Responsive – Mobile ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  #sage-chat-window {
+    width: calc(100vw - 24px);
+    right: 12px;
+    bottom: 84px;
+    height: calc(100dvh - 108px);
+    max-height: 600px;
+    border-radius: var(--sage-radius-lg);
+  }
+
+  #sage-toggle-btn {
+    bottom: 18px;
+    right: 18px;
+    width: 54px;
+    height: 54px;
+  }
+}
+
+/* ── Utility: visually hidden ────────────────────────────────── */
+.sage-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}

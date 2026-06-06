@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sage AI Assistant — Demo</title>
+
+  <!-- Optional: Google Fonts (will also be loaded by sage-ai.js) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+    crossorigin="anonymous">
+
+  <style>
+    /* ── Demo Page Styles ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 600px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(37,99,235,.2);
+      color: #93c5fd;
+      border: 1px solid rgba(37,99,235,.4);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      padding: 5px 14px;
+      margin-bottom: 28px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #e2e8f0 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 18px;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: #94a3b8;
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: transform .2s, box-shadow .2s;
+      text-decoration: none;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(37,99,235,.4);
+    }
+
+    .btn-primary:hover { box-shadow: 0 8px 24px rgba(37,99,235,.5); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.06);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .code-block {
+      margin-top: 48px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: left;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #7dd3fc;
+      line-height: 1.7;
+    }
+
+    .code-comment { color: #475569; }
+    .code-tag     { color: #93c5fd; }
+    .code-attr    { color: #fbbf24; }
+    .code-val     { color: #4ade80; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-top: 40px;
+      width: 100%;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .feature-card .icon { font-size: 20px; margin-bottom: 8px; }
+    .feature-card strong { display: block; color: #e2e8f0; margin-bottom: 4px; font-size: 13.5px; }
+
+    footer {
+      margin-top: 60px;
+      font-size: 12px;
+      color: #475569;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="hero-badge">✨ Production Ready</div>
+
+    <h1>Sage AI Assistant</h1>
+
+    <p>
+      A zero-dependency, embeddable AI chatbot widget.<br>
+      Drop one <code>&lt;script&gt;</code> tag into any page and you're live.
+    </p>
+
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="SageAI.open()">
+        💬 Open Chat
+      </button>
+      <a class="btn btn-secondary" href="README.md" target="_blank">
+        📖 Documentation
+      </a>
+    </div>
+
+    <!-- Embed code preview -->
+    <div class="code-block">
+      <span class="code-comment">&lt;!-- Add this ONCE before &lt;/body&gt; --&gt;</span><br>
+      <span class="code-tag">&lt;script </span>
+      <span class="code-attr">src</span>=<span class="code-val">"https://yourdomain.com/sage-ai.js"</span>
+      <span class="code-tag">&gt;&lt;/script&gt;</span>
+    </div>
+
+    <!-- Feature cards -->
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🤖</div>
+        <strong>AI Powered</strong>
+        Connect any backend — OpenAI, Claude, custom API
+      </div>
+      <div class="feature-card">
+        <div class="icon">💾</div>
+        <strong>Persistent</strong>
+        Conversation survives page refreshes via localStorage
+      </div>
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <strong>Lead Capture</strong>
+        Collects name, email & phone automatically
+      </div>
+      <div class="feature-card">
+        <div class="icon">🌓</div>
+        <strong>Dark Mode</strong>
+        Respects system preference or toggle manually
+      </div>
+      <div class="feature-card">
+        <div class="icon">📱</div>
+        <strong>Responsive</strong>
+        Looks perfect on any screen size
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <strong>Rebrandable</strong>
+        Change colours & name via one config object
+      </div>
+    </div>
+  </div>
+
+  <footer>Sage AI Assistant Widget — MIT Licensed</footer>
+
+  <!--
+    ╔══════════════════════════════════════════════════════╗
+    ║   This single script tag is all you need to embed   ║
+    ║   the chatbot on any website.                        ║
+    ╚══════════════════════════════════════════════════════╝
+  -->
+  <script src="sage-ai.js"></script>
+
+</body>
+</html>

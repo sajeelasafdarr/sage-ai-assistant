@@ -1338,18 +1338,19 @@ async function sendChatMessage() {
   const persona = document.getElementById('cfg-persona')?.value || 'You are Sage AI, a helpful business assistant.';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: persona,
-        messages: chatHistory,
+        message: chatHistory[chatHistory.length - 1].content,
+        history: chatHistory.slice(0, -1).map(m => ({
+          role: m.role === 'assistant' ? 'bot' : 'user',
+          text: m.content
+        }))
       })
     });
     const data = await res.json();
-    const reply = data.content?.find(b => b.type === 'text')?.text || "I'm here to help!";
+    const reply = data.reply || "I'm here to help!";
     chatHistory.push({ role: 'assistant', content: reply });
     hideBotTyping();
     addChatBubble('bot', escHtml(reply));

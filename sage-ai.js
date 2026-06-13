@@ -18,7 +18,7 @@ const CONFIG = {
   subtitle:       "Powered by AI",
   logo:           "",                 // URL to logo image (leave "" to use emoji)
   logoEmoji:      "🤖",               // Fallback avatar emoji
-  webhookUrl:     "",                 // Make.com / Zapier / custom webhook endpoint
+  webhookUrl:     "https://hook.us2.make.com/3e7m3kiyqdv7cpd4nsoxeqgsx3lorvws",                 // Make.com / Zapier / custom webhook endpoint
   aiApiEndpoint:  "",                 // Your AI backend URL (see README)
   darkMode:       "auto",             // "auto" | "dark" | "light"
   showFooter:     true,               // Toggle "Powered by Sage AI" footer

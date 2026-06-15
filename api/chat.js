@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       { role: "user", parts: [{ text: message }] },
     ];
 
-    // Call Gemini API (free tier — gemini-1.5-flash is fast and free)
+    // Call Gemini API (free tier — gemini-2.0-flash is fast and free)
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {

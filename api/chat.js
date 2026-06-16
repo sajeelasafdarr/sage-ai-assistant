@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       { role: "user", parts: [{ text: message }] },
     ];
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
     console.log("Calling URL (no key):", url.split("?")[0]);
 
     const geminiRes = await fetch(url, {

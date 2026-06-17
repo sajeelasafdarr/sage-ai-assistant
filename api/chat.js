@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+        "Authorization": `Bearer ${process.env.Sage_API_Key}`
       },
       body: JSON.stringify({
         model: "llama3-8b-8192",

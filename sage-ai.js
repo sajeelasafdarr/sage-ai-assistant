@@ -18,8 +18,8 @@ const CONFIG = {
   subtitle:       "Powered by AI",
   logo:           "",                 // URL to logo image (leave "" to use emoji)
   logoEmoji:      "🤖",               // Fallback avatar emoji
-  webhookUrl:     "https://hook.us2.make.com/3e7m3kiyqdv7cpd4nsoxeqgsx3lorvws",                 // Make.com / Zapier / custom webhook endpoint
-  aiApiEndpoint:  "/api/chat",                 // Your AI backend URL (see README)
+  webhookUrl:     "",                 // Make.com / Zapier / custom webhook endpoint
+  aiApiEndpoint:  "",                 // Your AI backend URL (see README)
   darkMode:       "auto",             // "auto" | "dark" | "light"
   showFooter:     true,               // Toggle "Powered by Sage AI" footer
   leadAfterMsgs:  5,                  // Trigger lead capture after N user messages
@@ -548,9 +548,9 @@ async function handleUserMessage() {
   // ── Lead capture threshold reached? ──
   if (STATE.userMsgCount >= CONFIG.leadAfterMsgs && !STATE.leadSubmitted) {
     await sendToAI(text); // Still send last message to AI first
-    // Let the AI decide; if no capture_lead flag, handle threshold here
+    // Now trigger lead capture if not already started
     if (!STATE.leadMode && !STATE.leadSubmitted) {
-      // We'll defer to the next message exchange
+      startLeadCapture();
     }
     return;
   }

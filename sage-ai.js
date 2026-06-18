@@ -1,50 +1,64 @@
 /*!
- * Sage AI Assistant Widget
- * Version: 1.0.0
- * Description: Embeddable AI chatbot widget — drop-in, zero-dependency.
- * Usage: <script src="sage-ai.js"></script>
+ * Sage AI Assistant Widget  v1.2 — FINAL
+ * ─────────────────────────────────────────
+ * ✅ Lead capture: asks name → email → phone
+ * ✅ Works with OR without an AI backend
+ * ✅ Posts lead to Make.com webhook
+ * ✅ Pushes lead into CRM dashboard (crm.js)
+ * ✅ Groq / OpenAI / any AI endpoint supported
  */
 
 /* ============================================================
    SECTION 1 — CONFIGURATION
-   Edit these values to instantly rebrand the chatbot.
+   ▸ Only edit values in this block to customise the widget.
    ============================================================ */
 const CONFIG = {
   companyName:    "Sage AI Assistant",
-  primaryColor:   "#2563eb",          // Main brand colour
-  secondaryColor: "#f8fafc",          // Surface / background
-  accentColor:    "#1e40af",          // Darker shade for hover / gradient
+  primaryColor:   "#2563eb",
+  secondaryColor: "#f8fafc",
+  accentColor:    "#1e40af",
   welcomeMessage: "👋 Hi! I'm Sage AI Assistant. How can I help you today?",
   subtitle:       "Powered by AI",
-  logo:           "",                 // URL to logo image (leave "" to use emoji)
-  logoEmoji:      "🤖",               // Fallback avatar emoji
-  webhookUrl:     "https://hook.us2.make.com/3e7m3kiyqdv7cpd4nsoxeqgsx3lorvws",                 // Make.com / Zapier / custom webhook endpoint
-  aiApiEndpoint:  "",                 // Your AI backend URL (see README)
-  darkMode:       "auto",             // "auto" | "dark" | "light"
-  showFooter:     true,               // Toggle "Powered by Sage AI" footer
-  leadAfterMsgs:  5,                  // Trigger lead capture after N user messages
-  cssHref:        "sage-ai.css",      // Path/URL to the stylesheet
+  logo:           "",        // URL to logo image — leave "" to use emoji
+  logoEmoji:      "🤖",
+  darkMode:       "auto",    // "auto" | "light" | "dark"
+  showFooter:     true,
+
+  // ── AI backend (your Groq proxy, OpenAI route, etc.) ──────────
+  // Leave "" if you have no backend yet — the bot will still do
+  // lead capture and send to Make.com perfectly.
+  aiApiEndpoint:  "",
+
+  // ── Make.com webhook ──────────────────────────────────────────
+  // Paste your Make.com Custom Webhook URL here.
+  // This is called as soon as the user provides name+email+phone.
+  webhookUrl: "https://hook.us2.make.com/3e7m3kiyqdv7cpd4nsoxeqgsx3lorvws",
+
+  // ── Lead capture trigger ──────────────────────────────────────
+  // How many user messages before the bot asks for contact info.
+  // Set to 1 to ask immediately after the very first message.
+  leadAfterMsgs: 3,
+
+  cssHref: "sage-ai.css",
 };
 
 /* ============================================================
-   SECTION 2 — STATE
-   In-memory runtime state.
+   SECTION 2 — RUNTIME STATE
    ============================================================ */
 const STATE = {
-  isOpen:           false,
-  conversationId:   null,
-  messages:         [],           // { role, text, time }
-  userMsgCount:     0,
-  leadMode:         false,        // Currently collecting lead info?
-  leadStep:         0,            // 0=name, 1=email, 2=phone
-  leadData:         {},           // Collected name/email/phone
-  leadSubmitted:    false,        // Prevent duplicate submissions
-  aiPending:        false,        // Awaiting AI response?
+  isOpen:         false,
+  conversationId: null,
+  messages:       [],   // { role, text, time }
+  userMsgCount:   0,
+  leadMode:       false,
+  leadStep:       0,    // 0 = name | 1 = email | 2 = phone
+  leadData:       {},   // { name, email, phone }
+  leadSubmitted:  false,
+  aiPending:      false,
 };
 
 /* ============================================================
-   SECTION 3 — STORAGE HELPERS
-   All persistence goes through these three functions.
+   SECTION 3 — LOCAL STORAGE
    ============================================================ */
 const STORAGE_KEY = "sage_ai_session";
 
@@ -57,14 +71,13 @@ function saveSession() {
       leadSubmitted:  STATE.leadSubmitted,
       leadData:       STATE.leadData,
     }));
-  } catch (_) { /* storage unavailable */ }
+  } catch (_) { /* quota exceeded or private browsing */ }
 }
 
 function loadSession() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : null;
   } catch (_) { return null; }
 }
 
@@ -73,70 +86,61 @@ function clearSession() {
 }
 
 /* ============================================================
-   SECTION 4 — UNIQUE ID GENERATION
+   SECTION 4 — ID GENERATION
    ============================================================ */
 function generateId() {
-  // crypto.randomUUID is widely supported; fall back to Math.random
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
 }
 
 /* ============================================================
-   SECTION 5 — DOM CONSTRUCTION
-   Build the full widget markup and inject it into the page.
+   SECTION 5 — BUILD WIDGET HTML
    ============================================================ */
 function injectCSS() {
-  // Inject the stylesheet if it hasn't already been loaded
   if (document.getElementById("sage-ai-styles")) return;
-  const link = document.createElement("link");
-  link.id   = "sage-ai-styles";
-  link.rel  = "stylesheet";
-  link.href = CONFIG.cssHref;
+
+  const link      = document.createElement("link");
+  link.id         = "sage-ai-styles";
+  link.rel        = "stylesheet";
+  link.href       = CONFIG.cssHref;
   document.head.appendChild(link);
 
-  // Also inject Google Fonts (DM Sans) for optimal typography
-  const gf = document.createElement("link");
-  gf.rel  = "preconnect";
-  gf.href = "https://fonts.googleapis.com";
-  document.head.appendChild(gf);
-  const gf2 = document.createElement("link");
-  gf2.rel         = "stylesheet";
-  gf2.crossOrigin = "anonymous";
-  gf2.href        = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap";
-  document.head.appendChild(gf2);
+  const gfPre     = document.createElement("link");
+  gfPre.rel       = "preconnect";
+  gfPre.href      = "https://fonts.googleapis.com";
+  document.head.appendChild(gfPre);
+
+  const gfFont    = document.createElement("link");
+  gfFont.rel      = "stylesheet";
+  gfFont.crossOrigin = "anonymous";
+  gfFont.href     = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap";
+  document.head.appendChild(gfFont);
 }
 
 function buildWidget() {
-  // ── Wrapper (scopes all CSS vars and prevents bleed) ──
   const widget = document.createElement("div");
-  widget.id = "sage-ai-widget";
+  widget.id    = "sage-ai-widget";
   applyTheme(widget);
 
-  // ── Toggle button ──────────────────────────────────────
   widget.innerHTML = `
-    <!-- Floating chat toggle button -->
+    <!-- ── Floating button ──────────────────────────────── -->
     <button id="sage-toggle-btn" aria-label="Open chat" aria-expanded="false">
-      <!-- Chat bubble icon -->
       <svg class="icon-chat" viewBox="0 0 24 24">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
-      <!-- Close X icon -->
       <svg class="icon-close" viewBox="0 0 24 24">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6"  y1="6" x2="18" y2="18"/>
       </svg>
-      <!-- Notification badge -->
       <span id="sage-badge" aria-hidden="true">1</span>
     </button>
 
-    <!-- Chat window -->
+    <!-- ── Chat window ──────────────────────────────────── -->
     <div id="sage-chat-window" role="dialog" aria-modal="true" aria-label="Sage AI Chat">
 
-      <!-- Header -->
       <div id="sage-header">
         <div id="sage-avatar">${buildAvatar()}</div>
         <div id="sage-header-info">
@@ -147,21 +151,23 @@ function buildWidget() {
           </div>
         </div>
         <div id="sage-header-actions">
-          <!-- Dark mode toggle -->
-          <button class="sage-header-btn" id="sage-theme-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <button class="sage-header-btn" id="sage-theme-btn"
+                  title="Toggle dark mode" aria-label="Toggle dark mode">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
           </button>
-          <!-- Minimise -->
-          <button class="sage-header-btn" id="sage-close-btn" title="Close chat" aria-label="Close chat">
-            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+          <button class="sage-header-btn" id="sage-close-btn"
+                  title="Close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
           </button>
         </div>
       </div>
 
-      <!-- Message list -->
       <div id="sage-messages" aria-live="polite" aria-label="Messages"></div>
 
-      <!-- Typing indicator (shown while AI is "thinking") -->
       <div id="sage-typing" aria-label="Assistant is typing" role="status">
         <div class="sage-msg-avatar">🤖</div>
         <div>
@@ -174,7 +180,6 @@ function buildWidget() {
         </div>
       </div>
 
-      <!-- Text input bar -->
       <div id="sage-input-area">
         <textarea
           id="sage-input"
@@ -191,8 +196,9 @@ function buildWidget() {
         </button>
       </div>
 
-      <!-- Optional footer -->
-      ${CONFIG.showFooter ? `<div id="sage-footer">Powered by <strong>Sage AI</strong></div>` : ""}
+      ${CONFIG.showFooter
+        ? `<div id="sage-footer">Powered by <strong>Sage AI</strong></div>`
+        : ""}
     </div>
   `;
 
@@ -200,26 +206,21 @@ function buildWidget() {
 }
 
 function buildAvatar() {
-  if (CONFIG.logo) {
-    return `<img src="${escHtml(CONFIG.logo)}" alt="${escHtml(CONFIG.companyName)} logo">`;
-  }
-  return CONFIG.logoEmoji;
+  return CONFIG.logo
+    ? `<img src="${escHtml(CONFIG.logo)}" alt="${escHtml(CONFIG.companyName)} logo">`
+    : CONFIG.logoEmoji;
 }
 
 /* ============================================================
-   SECTION 6 — THEME MANAGEMENT
+   SECTION 6 — THEME
    ============================================================ */
-function applyTheme(widget) {
-  const el = widget || document.getElementById("sage-ai-widget");
+function applyTheme(el) {
+  el = el || document.getElementById("sage-ai-widget");
   if (!el) return;
-
   let theme = CONFIG.darkMode;
-  if (theme === "auto") {
+  if (theme === "auto")
     theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
   el.dataset.theme = theme;
-
-  // Apply CONFIG colours as CSS custom properties
   el.style.setProperty("--sage-primary",      CONFIG.primaryColor);
   el.style.setProperty("--sage-primary-dark", CONFIG.accentColor);
   el.style.setProperty("--sage-secondary",    CONFIG.secondaryColor);
@@ -227,75 +228,56 @@ function applyTheme(widget) {
 
 function toggleTheme() {
   const el = document.getElementById("sage-ai-widget");
-  if (!el) return;
-  el.dataset.theme = el.dataset.theme === "dark" ? "light" : "dark";
+  if (el) el.dataset.theme = el.dataset.theme === "dark" ? "light" : "dark";
 }
 
 /* ============================================================
-   SECTION 7 — OPEN / CLOSE LOGIC
+   SECTION 7 — OPEN / CLOSE
    ============================================================ */
 function openChat() {
   STATE.isOpen = true;
-  const win = document.getElementById("sage-chat-window");
-  const btn = document.getElementById("sage-toggle-btn");
+  const win   = document.getElementById("sage-chat-window");
+  const btn   = document.getElementById("sage-toggle-btn");
   const badge = document.getElementById("sage-badge");
-
   win.classList.add("open");
   btn.classList.add("open");
   btn.setAttribute("aria-expanded", "true");
   badge.classList.remove("visible");
-
-  // Focus input
   setTimeout(() => {
-    const input = document.getElementById("sage-input");
-    if (input) input.focus();
+    const inp = document.getElementById("sage-input");
+    if (inp) inp.focus();
   }, 350);
-
   scrollToBottom();
 }
 
 function closeChat() {
   STATE.isOpen = false;
-  const win = document.getElementById("sage-chat-window");
+  document.getElementById("sage-chat-window").classList.remove("open");
   const btn = document.getElementById("sage-toggle-btn");
-
-  win.classList.remove("open");
   btn.classList.remove("open");
   btn.setAttribute("aria-expanded", "false");
 }
 
-function toggleChat() {
-  STATE.isOpen ? closeChat() : openChat();
-}
+function toggleChat() { STATE.isOpen ? closeChat() : openChat(); }
 
 /* ============================================================
-   SECTION 8 — MESSAGE RENDERING
+   SECTION 8 — MESSAGES
    ============================================================ */
-function formatTime(ts) {
-  const d = ts ? new Date(ts) : new Date();
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
 function escHtml(str) {
-  const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-  return String(str).replace(/[&<>"']/g, (c) => map[c]);
+  const m = { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" };
+  return String(str).replace(/[&<>"']/g, c => m[c]);
 }
 
-/**
- * Append a chat bubble to the message list.
- * @param {string} role  "user" | "bot"
- * @param {string} text  Message content (plain text)
- * @param {number} ts    Unix timestamp (ms)
- * @param {boolean} persist  Save to localStorage?
- */
+function formatTime(ts) {
+  return (ts ? new Date(ts) : new Date())
+    .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 function appendMessage(role, text, ts, persist = true) {
-  const msgList = document.getElementById("sage-messages");
-  if (!msgList) return;
-
+  const list = document.getElementById("sage-messages");
+  if (!list) return;
   const time = ts || Date.now();
-  const timeStr = formatTime(time);
-
-  const row = document.createElement("div");
+  const row  = document.createElement("div");
   row.className = `sage-msg-row ${role}`;
 
   if (role === "bot") {
@@ -303,22 +285,19 @@ function appendMessage(role, text, ts, persist = true) {
       <div class="sage-msg-avatar">${CONFIG.logoEmoji}</div>
       <div>
         <div class="sage-bubble">${escHtml(text)}</div>
-        <div class="sage-ts">${timeStr}</div>
-      </div>
-    `;
+        <div class="sage-ts">${formatTime(time)}</div>
+      </div>`;
   } else {
     row.innerHTML = `
       <div>
         <div class="sage-bubble">${escHtml(text)}</div>
-        <div class="sage-ts">${timeStr}</div>
-      </div>
-    `;
+        <div class="sage-ts">${formatTime(time)}</div>
+      </div>`;
   }
 
-  msgList.appendChild(row);
+  list.appendChild(row);
   scrollToBottom();
 
-  // Persist
   if (persist) {
     STATE.messages.push({ role, text, time });
     saveSession();
@@ -327,10 +306,7 @@ function appendMessage(role, text, ts, persist = true) {
 
 function scrollToBottom() {
   const el = document.getElementById("sage-messages");
-  if (el) {
-    // Use requestAnimationFrame so the DOM has painted
-    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-  }
+  if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
 }
 
 /* ============================================================
@@ -340,41 +316,38 @@ function showTyping() {
   const el = document.getElementById("sage-typing");
   if (el) { el.classList.add("visible"); scrollToBottom(); }
 }
-
 function hideTyping() {
   const el = document.getElementById("sage-typing");
   if (el) el.classList.remove("visible");
 }
 
+function delay(ms = 900) { return new Promise(r => setTimeout(r, ms)); }
+
 /* ============================================================
-   SECTION 10 — AI API COMMUNICATION
+   SECTION 10 — AI API  (Groq / OpenAI / custom proxy)
+   ─────────────────────────────────────────────────────────────
+   If aiApiEndpoint is empty, the bot skips calling AI and goes
+   straight to lead capture (or gives a fallback message).
    ============================================================ */
-/**
- * Send a message to the AI backend and display the response.
- * Falls back gracefully if no endpoint is configured.
- *
- * @param {string} userMessage
- */
 async function sendToAI(userMessage) {
   if (STATE.aiPending) return;
   STATE.aiPending = true;
 
-  // Disable send button
   const sendBtn = document.getElementById("sage-send-btn");
   if (sendBtn) sendBtn.disabled = true;
-
   showTyping();
 
-  // If no endpoint is configured, reply with a placeholder
   if (!CONFIG.aiApiEndpoint) {
-    await fakeBotDelay();
+    // ── No backend: give a friendly canned reply ─────────────
+    await delay(800);
     hideTyping();
-    appendMessage("bot", "I'm Sage AI. Connect me to a real AI backend via CONFIG.aiApiEndpoint to get live responses!");
+    appendMessage("bot", "Great question! Let me connect you with the right person who can help. 🙌");
     STATE.aiPending = false;
     if (sendBtn) sendBtn.disabled = false;
     return;
   }
 
+  // ── Call the AI backend ───────────────────────────────────
   try {
     const res = await fetch(CONFIG.aiApiEndpoint, {
       method:  "POST",
@@ -382,17 +355,15 @@ async function sendToAI(userMessage) {
       body:    JSON.stringify({
         message:         userMessage,
         conversation_id: STATE.conversationId,
-        history:         STATE.messages.slice(-10), // send last 10 messages for context
+        history:         STATE.messages.slice(-10),
       }),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
     const data = await res.json();
-
     hideTyping();
 
-    // Check for lead-capture flag from backend
+    // Backend can force lead-capture by returning { capture_lead: true }
     if (data.capture_lead === true && !STATE.leadSubmitted) {
       startLeadCapture();
       STATE.aiPending = false;
@@ -400,79 +371,83 @@ async function sendToAI(userMessage) {
       return;
     }
 
-    const reply = data.reply || "I didn't get a response. Please try again.";
-    appendMessage("bot", reply);
+    appendMessage("bot", data.reply || "I didn't catch that — could you rephrase?");
 
   } catch (err) {
     console.error("[Sage AI] API error:", err);
     hideTyping();
-    appendMessage("bot", "Sorry, I'm having trouble connecting right now. Please try again later.");
+    appendMessage("bot", "Sorry, I'm having a connection issue. Please try again in a moment.");
   }
 
   STATE.aiPending = false;
   if (sendBtn) sendBtn.disabled = false;
 }
 
-/** Simulate typing delay (used when no endpoint is configured) */
-function fakeBotDelay(ms = 1200) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /* ============================================================
-   SECTION 11 — LEAD CAPTURE FLOW
+   SECTION 11 — LEAD CAPTURE CONVERSATION
+   Flow: name → email → phone → submitLead()
    ============================================================ */
+
+/** Kick off the lead-capture sequence */
 function startLeadCapture() {
   if (STATE.leadMode || STATE.leadSubmitted) return;
   STATE.leadMode = true;
   STATE.leadStep = 0;
   STATE.leadData = {};
-
-  appendMessage("bot",
-    "I'd be happy to have our team assist you further. May I have your name?"
+  appendMessage(
+    "bot",
+    "Before I connect you with our team, could I grab your name? 😊"
   );
 }
 
 /**
- * Handle a user reply during the lead capture conversation.
- * Returns true if we consumed the message (still in lead flow).
+ * Called for every user message while leadMode === true.
+ * Returns true so the main handler knows the message was consumed.
  */
 async function handleLeadReply(text) {
   if (!STATE.leadMode) return false;
 
+  const val = text.trim();
+
   switch (STATE.leadStep) {
-    case 0: // Awaiting name
-      STATE.leadData.name = text;
-      STATE.leadStep = 1;
-      showTyping();
-      await fakeBotDelay(700);
-      hideTyping();
-      appendMessage("bot", `Nice to meet you, ${escHtml(STATE.leadData.name)}! 😊 What's your email address?`);
-      break;
 
-    case 1: // Awaiting email
-      if (!isValidEmail(text)) {
-        showTyping();
-        await fakeBotDelay(600);
-        hideTyping();
-        appendMessage("bot", "That doesn't look like a valid email address. Could you please check it?");
-        return true; // Stay on step 1
+    // ── Step 0: collect name ────────────────────────────────
+    case 0:
+      if (val.length < 2) {
+        showTyping(); await delay(500); hideTyping();
+        appendMessage("bot", "Please enter your full name so we can address you properly.");
+        return true;
       }
-      STATE.leadData.email = text;
-      STATE.leadStep = 2;
-      showTyping();
-      await fakeBotDelay(700);
-      hideTyping();
-      appendMessage("bot", "Perfect! And your phone number? (You can skip this by typing 'skip')");
+      STATE.leadData.name = val;
+      STATE.leadStep = 1;
+      showTyping(); await delay(700); hideTyping();
+      appendMessage("bot",
+        `Nice to meet you, ${escHtml(STATE.leadData.name)}! 👋\nWhat's the best email address for you?`
+      );
       break;
 
-    case 2: // Awaiting phone
-      STATE.leadData.phone = text.toLowerCase() === "skip" ? "" : text;
+    // ── Step 1: collect email ───────────────────────────────
+    case 1:
+      if (!isValidEmail(val)) {
+        showTyping(); await delay(600); hideTyping();
+        appendMessage("bot",
+          "Hmm, that email doesn't look right. Could you double-check it? (example: you@company.com)"
+        );
+        return true; // stay on step 1
+      }
+      STATE.leadData.email = val;
+      STATE.leadStep = 2;
+      showTyping(); await delay(700); hideTyping();
+      appendMessage("bot",
+        "Got it! 📧\nAnd your phone number? (You can type 'skip' if you prefer not to share it)"
+      );
+      break;
+
+    // ── Step 2: collect phone then fire webhook ─────────────
+    case 2:
+      STATE.leadData.phone = val.toLowerCase() === "skip" ? "" : val;
       STATE.leadMode = false;
-
-      showTyping();
-      await fakeBotDelay(900);
-      hideTyping();
-
+      showTyping(); await delay(1000); hideTyping();
       await submitLead();
       break;
   }
@@ -484,42 +459,95 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+/* ============================================================
+   SECTION 12 — LEAD SUBMISSION
+   ─────────────────────────────────────────────────────────────
+   Sends the collected lead to TWO places:
+     1. window.SageCRM  — the local CRM dashboard (crm.js)
+     2. CONFIG.webhookUrl — Make.com → Zoho CRM
+
+   JSON payload sent to Make.com:
+   {
+     "name":            "Jane Smith",
+     "email":           "jane@acme.com",
+     "phone":           "+1 555 1234",
+     "source":          "chatbot",
+     "conversation_id": "uuid",
+     "timestamp":       "2025-01-01T12:00:00.000Z",
+     "conversation": [
+       { "role": "bot",  "text": "Hi! …", "time": 1700000000000 },
+       { "role": "user", "text": "Hello", "time": 1700000010000 },
+       …
+     ]
+   }
+
+   Make.com mapping → Zoho CRM Create Lead:
+     name            → Last_Name
+     email           → Email
+     phone           → Phone
+     source          → Lead_Source  (or hardcode "Chat")
+   ============================================================ */
 async function submitLead() {
   if (STATE.leadSubmitted) return;
 
+  // Lock FIRST to prevent any race condition
+  STATE.leadSubmitted = true;
+  saveSession();
+
   const payload = {
-    name:            STATE.leadData.name    || "",
-    email:           STATE.leadData.email   || "",
-    phone:           STATE.leadData.phone   || "",
-    conversation:    STATE.messages,
-    timestamp:       new Date().toISOString(),
+    name:            STATE.leadData.name  || "",
+    email:           STATE.leadData.email || "",
+    phone:           STATE.leadData.phone || "",
+    source:          "chatbot",
     conversation_id: STATE.conversationId,
+    timestamp:       new Date().toISOString(),
+    conversation:    STATE.messages,
   };
 
-  try {
-    if (CONFIG.webhookUrl) {
-      await fetch(CONFIG.webhookUrl, {
+  /* ── 1. Local CRM dashboard ───────────────────────────────── */
+  if (window.SageCRM && typeof window.SageCRM.createLead === "function") {
+    window.SageCRM.createLead({
+      name:   payload.name,
+      email:  payload.email,
+      phone:  payload.phone,
+      source: "chatbot",
+    });
+    console.info("[Sage AI] Lead saved to CRM dashboard.");
+  }
+
+  /* ── 2. Make.com webhook ──────────────────────────────────── */
+  if (CONFIG.webhookUrl) {
+    try {
+      const res = await fetch(CONFIG.webhookUrl, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(payload),
       });
+      if (res.ok) {
+        console.info("[Sage AI] ✅ Lead sent to Make.com successfully.");
+      } else {
+        console.warn("[Sage AI] ⚠️ Make.com returned status:", res.status);
+      }
+    } catch (err) {
+      // Non-fatal — lead is already in local CRM
+      console.error("[Sage AI] ⚠️ Make.com webhook failed:", err.message);
     }
-
-    STATE.leadSubmitted = true;
-    saveSession();
-
-    appendMessage("bot", "✅ Thank you! Our team will contact you shortly. Is there anything else I can help you with?");
-
-  } catch (err) {
-    console.error("[Sage AI] Webhook error:", err);
-    appendMessage("bot", "✅ Thank you for your information! We'll be in touch soon.");
-    STATE.leadSubmitted = true;
-    saveSession();
   }
+
+  /* ── 3. Thank the user ────────────────────────────────────── */
+  appendMessage(
+    "bot",
+    "✅ Perfect! Our team has your details and will reach out to you very soon.\n\nIs there anything else I can help you with in the meantime?"
+  );
 }
 
 /* ============================================================
-   SECTION 12 — USER MESSAGE HANDLING
+   SECTION 13 — MAIN MESSAGE HANDLER
+   ─────────────────────────────────────────────────────────────
+   Priority order:
+     1. If already in lead flow → route to handleLeadReply
+     2. If threshold reached   → AI reply (if available) THEN lead capture
+     3. Otherwise              → normal AI call
    ============================================================ */
 async function handleUserMessage() {
   const input = document.getElementById("sage-input");
@@ -528,59 +556,63 @@ async function handleUserMessage() {
   const text = input.value.trim();
   if (!text || STATE.aiPending) return;
 
-  // Clear input
+  // Clear textarea
   input.value = "";
   input.style.height = "auto";
 
-  // Display user message
+  // Show user bubble + count
   appendMessage("user", text);
-
-  // Track message count (for lead-capture threshold)
   STATE.userMsgCount++;
   saveSession();
 
-  // ── Lead capture mode? ──
+  // ── 1. Still in lead-capture flow ───────────────────────────
   if (STATE.leadMode) {
     await handleLeadReply(text);
     return;
   }
 
-  // ── Lead capture threshold reached? ──
-  if (STATE.userMsgCount >= CONFIG.leadAfterMsgs && !STATE.leadSubmitted) {
-    await sendToAI(text); // Still send last message to AI first
-    // Now trigger lead capture if not already started
+  // ── 2. Lead already submitted — just keep chatting ──────────
+  if (STATE.leadSubmitted) {
+    await sendToAI(text);
+    return;
+  }
+
+  // ── 3. Threshold reached ────────────────────────────────────
+  //   Answer with AI first (if backend exists), then ask for lead.
+  //   If no backend, give a canned reply then immediately capture.
+  if (STATE.userMsgCount >= CONFIG.leadAfterMsgs) {
+    await sendToAI(text);                       // works even with no endpoint
+    await delay(400);                           // short natural pause
     if (!STATE.leadMode && !STATE.leadSubmitted) {
       startLeadCapture();
     }
     return;
   }
 
-  // ── Normal AI call ──
+  // ── 4. Normal message — call AI ─────────────────────────────
   await sendToAI(text);
 }
 
 /* ============================================================
-   SECTION 13 — SESSION RESTORATION
-   Replay persisted messages without making new API calls.
+   SECTION 14 — SESSION RESTORE ON PAGE LOAD
    ============================================================ */
 function restoreSession() {
   const saved = loadSession();
 
   if (saved && saved.conversationId) {
-    STATE.conversationId  = saved.conversationId;
-    STATE.userMsgCount    = saved.userMsgCount    || 0;
-    STATE.leadSubmitted   = saved.leadSubmitted   || false;
-    STATE.leadData        = saved.leadData        || {};
+    STATE.conversationId = saved.conversationId;
+    STATE.userMsgCount   = saved.userMsgCount  || 0;
+    STATE.leadSubmitted  = saved.leadSubmitted || false;
+    STATE.leadData       = saved.leadData      || {};
 
-    // Replay messages into DOM
     if (Array.isArray(saved.messages)) {
-      saved.messages.forEach(({ role, text, time }) => {
-        appendMessage(role, text, time, false /* don't re-save */);
-      });
+      saved.messages.forEach(({ role, text, time }) =>
+        appendMessage(role, text, time, false)
+      );
       STATE.messages = saved.messages;
     }
   } else {
-    // Brand new session
+    // Fresh session
     STATE.conversationId = generateId();
     appendMessage("bot", CONFIG.welcomeMessage, Date.now(), false);
     STATE.messages = [{ role: "bot", text: CONFIG.welcomeMessage, time: Date.now() }];
@@ -589,70 +621,60 @@ function restoreSession() {
 }
 
 /* ============================================================
-   SECTION 14 — EVENT LISTENERS
+   SECTION 15 — EVENT LISTENERS
    ============================================================ */
 function attachEvents() {
-  const toggleBtn  = document.getElementById("sage-toggle-btn");
-  const closeBtn   = document.getElementById("sage-close-btn");
-  const themeBtn   = document.getElementById("sage-theme-btn");
-  const sendBtn    = document.getElementById("sage-send-btn");
-  const input      = document.getElementById("sage-input");
+  document.getElementById("sage-toggle-btn").addEventListener("click", toggleChat);
+  document.getElementById("sage-close-btn").addEventListener("click",  closeChat);
+  document.getElementById("sage-theme-btn").addEventListener("click",  toggleTheme);
+  document.getElementById("sage-send-btn").addEventListener("click",   handleUserMessage);
 
-  toggleBtn.addEventListener("click", toggleChat);
-  closeBtn.addEventListener("click",  closeChat);
-  themeBtn.addEventListener("click",  toggleTheme);
-  sendBtn.addEventListener("click",   handleUserMessage);
+  const input = document.getElementById("sage-input");
 
-  // Send on Enter (Shift+Enter = newline)
-  input.addEventListener("keydown", (e) => {
+  // Enter to send, Shift+Enter for newline
+  input.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleUserMessage();
     }
   });
 
-  // Auto-grow textarea
+  // Auto-grow textarea up to 120px
   input.addEventListener("input", () => {
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 120) + "px";
   });
 
-  // Respond to OS dark-mode changes when CONFIG.darkMode === "auto"
+  // Sync with OS dark-mode changes
   if (CONFIG.darkMode === "auto") {
     window.matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", () => applyTheme(null));
   }
 
-  // Close chat when clicking the backdrop on mobile
-  document.addEventListener("click", (e) => {
+  // Close chat when tapping outside (mobile)
+  document.addEventListener("click", e => {
     if (!STATE.isOpen) return;
     const win    = document.getElementById("sage-chat-window");
     const toggle = document.getElementById("sage-toggle-btn");
-    if (!win.contains(e.target) && !toggle.contains(e.target)) {
-      closeChat();
-    }
+    if (!win.contains(e.target) && !toggle.contains(e.target)) closeChat();
   });
 }
 
 /* ============================================================
-   SECTION 15 — PUBLIC API
-   Expose a small surface on window for advanced integrations.
+   SECTION 16 — PUBLIC API  (window.SageAI)
    ============================================================ */
 window.SageAI = {
-  open:          openChat,
-  close:         closeChat,
-  toggle:        toggleChat,
-  sendMessage:   handleUserMessage,
-  clearHistory:  () => { clearSession(); location.reload(); },
-  getState:      () => ({ ...STATE }),
-  setConfig:     (overrides) => {
-    Object.assign(CONFIG, overrides);
-    applyTheme(null);
-  },
+  open:         openChat,
+  close:        closeChat,
+  toggle:       toggleChat,
+  clearHistory: () => { clearSession(); location.reload(); },
+  getState:     () => ({ ...STATE }),
+  // Update config at runtime, e.g. SageAI.setConfig({ primaryColor:"#7c3aed" })
+  setConfig:    overrides => { Object.assign(CONFIG, overrides); applyTheme(null); },
 };
 
 /* ============================================================
-   SECTION 16 — INITIALISATION
+   SECTION 17 — INIT
    ============================================================ */
 function init() {
   injectCSS();
@@ -660,7 +682,7 @@ function init() {
   attachEvents();
   restoreSession();
 
-  // Show badge after 3 s if chat hasn't been opened yet
+  // Show red badge after 3 s if user hasn't opened the chat
   setTimeout(() => {
     if (!STATE.isOpen) {
       const badge = document.getElementById("sage-badge");
@@ -668,10 +690,9 @@ function init() {
     }
   }, 3000);
 
-  console.info("[Sage AI] Widget initialised. Conversation ID:", STATE.conversationId);
+  console.info("[Sage AI] v1.2 ready | ID:", STATE.conversationId);
 }
 
-/* ── Kick off after DOM is ready ─────────────────────────────── */
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {

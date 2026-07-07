@@ -26,7 +26,7 @@ const CONFIG = {
   aiApiEndpoint: "",
 
   // Your Make.com Custom Webhook URL
-  webhookUrl: "https://hook.us2.make.com/3e7m3kiyqdv7cpd4nsoxeqgsx3lorvws",
+  webhookUrl: "https://hook.us2.make.com/ultvm1gntfk7siuqsx442tnoaj7n2p6s",
 
   // After how many USER messages the bot asks for contact info
   leadAfterMsgs: 3,
